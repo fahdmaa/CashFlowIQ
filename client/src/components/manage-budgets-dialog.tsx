@@ -123,7 +123,6 @@ function ManageBudgetsDialog({ open, onOpenChange }: ManageBudgetsDialogProps) {
 
 export default ManageBudgetsDialog;
 import { type Transaction, type InsertTransaction, type Budget, type InsertBudget, type Insight, type InsertInsight, type Category, type InsertCategory } from "@shared/schema";
-import { randomUUID } from "crypto";
 
 export interface IStorage {
   // Transactions
@@ -209,7 +208,7 @@ export class MemStorage implements IStorage {
   }
 
   async createTransaction(insertTransaction: InsertTransaction): Promise<Transaction> {
-    const id = randomUUID();
+    const id = crypto.randomUUID();
     const transaction: Transaction = {
       ...insertTransaction,
       id,
@@ -243,7 +242,7 @@ export class MemStorage implements IStorage {
   }
 
   async createBudget(insertBudget: InsertBudget): Promise<Budget> {
-    const id = randomUUID();
+    const id = crypto.randomUUID();
     const budget: Budget = {
       ...insertBudget,
       id,
@@ -281,7 +280,7 @@ export class MemStorage implements IStorage {
   }
 
   async createCategory(insertCategory: InsertCategory): Promise<Category> {
-    const id = randomUUID();
+    const id = crypto.randomUUID();
     const category: Category = { ...insertCategory, id, createdAt: new Date() };
     this.categories.set(id, category);
     if (category.type === "expense") {
@@ -301,7 +300,7 @@ export class MemStorage implements IStorage {
   }
 
   async createInsight(insertInsight: InsightInsert): Promise<Insight> {
-    const id = randomUUID();
+    const id = crypto.randomUUID();
     const insight: Insight = {
       ...insertInsight,
       id,
