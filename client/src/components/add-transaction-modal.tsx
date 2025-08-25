@@ -111,7 +111,7 @@ export default function AddTransactionModal({ isOpen, onClose }: AddTransactionM
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div>
-            <Label className="text-sm font-medium text-gray-700 mb-2 block">Type</Label>
+            <Label className="text-sm font-medium text-foreground mb-2 block">Type</Label>
             <RadioGroup defaultValue="expense" onValueChange={(value) => setValue("type", value as "income" | "expense")}>
               <div className="flex space-x-4">
                 <div className="flex items-center space-x-2">
@@ -126,26 +126,27 @@ export default function AddTransactionModal({ isOpen, onClose }: AddTransactionM
             </RadioGroup>
           </div>
 
-          <div>
-            <Label htmlFor="amount" className="text-sm font-medium text-gray-700 mb-2 block">Amount</Label>
-            <div className="relative">
-              <span className="absolute left-3 top-3 text-gray-500">DH</span>
-              <Input
-                {...register("amount")}
-                type="number"
-                step="0.01"
-                placeholder="0.00"
-                className="pl-8"
-                data-testid="input-amount"
-              />
-            </div>
-            {errors.amount && (
-              <p className="text-sm text-destructive mt-1">{errors.amount.message}</p>
-            )}
-          </div>
+<div>
+  <Label htmlFor="amount" className="text-sm font-medium text-foreground mb-2 block">Amount</Label>
+  <div className="relative">
+    {/* This is the corrected line */}
+    <span className="absolute left-3 top-3 text-muted-foreground">DH</span>
+    <Input
+      {...register("amount")}
+      type="number"
+      step="0.01"
+      placeholder="0.00"
+      className="pl-8"
+      data-testid="input-amount"
+    />
+  </div>
+  {errors.amount && (
+    <p className="text-sm text-destructive mt-1">{errors.amount.message}</p>
+  )}
+</div>
 
           <div>
-            <Label htmlFor="description" className="text-sm font-medium text-gray-700 mb-2 block">Description</Label>
+            <Label htmlFor="description" className="text-sm font-medium text-foreground mb-2 block">Description</Label>
             <Input
               {...register("description")}
               placeholder="What was this transaction for?"
@@ -157,7 +158,7 @@ export default function AddTransactionModal({ isOpen, onClose }: AddTransactionM
           </div>
 
           <div>
-            <Label htmlFor="category" className="text-sm font-medium text-gray-700 mb-2 block">Category</Label>
+            <Label htmlFor="category" className="text-sm font-medium text-foreground mb-2 block">Category</Label>
             <Select onValueChange={(value) => setValue("category", value)} value={getValues("category")}>
               <SelectTrigger data-testid="select-category">
                 <SelectValue placeholder="Select category" />
@@ -180,7 +181,7 @@ export default function AddTransactionModal({ isOpen, onClose }: AddTransactionM
           </div>
 
           <div>
-            <Label htmlFor="date" className="text-sm font-medium text-gray-700 mb-2 block">Date</Label>
+            <Label htmlFor="date" className="text-sm font-medium text-foreground mb-2 block">Date</Label>
             <Input
               {...register("date")}
               type="date"

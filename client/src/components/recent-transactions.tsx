@@ -14,12 +14,12 @@ const categoryIcons = {
 };
 
 const categoryColors = {
-  "Food & Dining": "bg-blue-100 text-blue-600",
-  "Transportation": "bg-purple-100 text-purple-600",
-  "Entertainment": "bg-green-100 text-green-600",
-  "Shopping": "bg-red-100 text-red-600",
-  "Bills & Utilities": "bg-yellow-100 text-yellow-600",
-  "Income": "bg-green-100 text-green-600",
+  "Food & Dining": "bg-blue-100 text-blue-600 dark:bg-blue-950 dark:text-blue-300",
+  "Transportation": "bg-purple-100 text-purple-600 dark:bg-purple-950 dark:text-purple-300",
+  "Entertainment": "bg-green-100 text-green-600 dark:bg-emerald-950 dark:text-emerald-300",
+  "Shopping": "bg-red-100 text-red-600 dark:bg-rose-950 dark:text-rose-300",
+  "Bills & Utilities": "bg-yellow-100 text-yellow-600 dark:bg-amber-950 dark:text-amber-300",
+  "Income": "bg-green-100 text-green-600 dark:bg-emerald-950 dark:text-emerald-300",
 };
 
 export default function RecentTransactions() {
@@ -29,7 +29,7 @@ export default function RecentTransactions() {
 
   if (isLoading) {
     return (
-      <Card className="bg-white rounded-xl shadow-sm border border-gray-200">
+      <Card className="rounded-xl">
         <CardHeader className="pb-6">
           <div className="flex items-center justify-between">
             <Skeleton className="h-7 w-36" />
@@ -88,7 +88,7 @@ export default function RecentTransactions() {
   const recentTransactions = transactions?.slice(0, 5) || [];
 
   return (
-    <Card className="bg-white rounded-xl shadow-sm border border-gray-200">
+    <Card className="rounded-xl">
       <CardHeader className="pb-6">
         <div className="flex items-center justify-between">
           <CardTitle className="text-xl font-semibold text-foreground">Recent Transactions</CardTitle>
@@ -101,7 +101,7 @@ export default function RecentTransactions() {
       <CardContent>
         <div className="space-y-4">
           {recentTransactions.length === 0 ? (
-            <div className="text-center py-8 text-gray-500" data-testid="text-no-transactions">
+            <div className="text-center py-8 text-muted-foreground" data-testid="text-no-transactions">
               No transactions yet. Add your first transaction to get started!
             </div>
           ) : (
@@ -112,7 +112,7 @@ export default function RecentTransactions() {
               return (
                 <div 
                   key={transaction.id} 
-                  className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors"
+                  className="flex items-center justify-between p-3 hover:bg-accent rounded-lg transition-colors"
                   data-testid={`transaction-${transaction.id}`}
                 >
                   <div className="flex items-center space-x-3">
@@ -123,7 +123,7 @@ export default function RecentTransactions() {
                       <p className="font-medium text-foreground" data-testid={`text-description-${transaction.id}`}>
                         {transaction.description}
                       </p>
-                      <p className="text-sm text-gray-500" data-testid={`text-category-${transaction.id}`}>
+                      <p className="text-sm text-muted-foreground" data-testid={`text-category-${transaction.id}`}>
                         {transaction.category}
                       </p>
                     </div>
@@ -132,7 +132,7 @@ export default function RecentTransactions() {
                     <p className={`font-semibold ${transaction.type === "income" ? "text-secondary" : "text-destructive"}`} data-testid={`text-amount-${transaction.id}`}>
                       {transaction.type === "income" ? "+" : "-"}{formatCurrency(transaction.amount)}
                     </p>
-                    <p className="text-sm text-gray-500" data-testid={`text-date-${transaction.id}`}>
+                    <p className="text-sm text-muted-foreground" data-testid={`text-date-${transaction.id}`}>
                       {formatDate(transaction.date)}
                     </p>
                   </div>
