@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertTransactionSchema, insertBudgetSchema } from "@shared/schema";
+import { insertTransactionSchema, insertBudgetSchema, updateBudgetSchema } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -63,6 +63,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.status(400).json({ message: "Invalid budget data", errors: error.errors });
       } else {
         res.status(500).json({ message: "Failed to create budget" });
+      }
+    }
+  });
+
+  app.put("/api/budgets/:category", async (req, res) => {
+    try {
+      const { category } = req.params;
+      const validatedData = updateBudgetSchema.parse(req.body);
+      const budget = await storage.updateBudgetLimit(category, validatedData.monthlyLimit);
+      if (!budget) {
+        return res.status(404).json({ message: "Budget not found" });
+      }
+      res.json(budget);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ message: "Invalid budget data", errors: error.errors });
+      } else {
+        res.status(500).json({ message: "Failed to update budget" });
       }
     }
   });
@@ -161,7 +179,7 @@ async function generateInsights(transaction: any) {
       await storage.createInsight({
         type: "warning",
         title: "Budget Exceeded",
-        message: `You've exceeded your ${transaction.category} budget by $${(parseFloat(budget.currentSpent) - parseFloat(budget.monthlyLimit)).toFixed(2)} this month.`,
+        message: `You've exceeded your ${transaction.category} budget by DH${(parseFloat(budget.currentSpent) - parseFloat(budget.monthlyLimit)).toFixed(2)} this month.`,
         category: transaction.category,
         isRead: "false"
       });

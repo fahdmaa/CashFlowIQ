@@ -86,11 +86,11 @@ export default function SpendingAnalytics() {
                 tickLine={false}
                 tick={{ fontSize: 12, fill: '#6B7280' }}
               />
-              <YAxis 
+              <YAxis
                 axisLine={false}
                 tickLine={false}
                 tick={{ fontSize: 12, fill: '#6B7280' }}
-                tickFormatter={(value) => `$${value}`}
+                tickFormatter={(value) => `${value} DH`}
               />
               <Line 
                 type="monotone" 

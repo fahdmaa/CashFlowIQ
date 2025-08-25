@@ -44,6 +44,10 @@ export const insertBudgetSchema = createInsertSchema(budgets).omit({
   createdAt: true,
 });
 
+export const updateBudgetSchema = z.object({
+  monthlyLimit: z.string(),
+});
+
 export const insertInsightSchema = createInsertSchema(insights).omit({
   id: true,
   createdAt: true,
@@ -53,5 +57,6 @@ export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
 export type Transaction = typeof transactions.$inferSelect;
 export type InsertBudget = z.infer<typeof insertBudgetSchema>;
 export type Budget = typeof budgets.$inferSelect;
+export type UpdateBudget = z.infer<typeof updateBudgetSchema>;
 export type InsertInsight = z.infer<typeof insertInsightSchema>;
 export type Insight = typeof insights.$inferSelect;

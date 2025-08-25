@@ -129,7 +129,7 @@ export default function AddTransactionModal({ isOpen, onClose }: AddTransactionM
           <div>
             <Label htmlFor="amount" className="text-sm font-medium text-gray-700 mb-2 block">Amount</Label>
             <div className="relative">
-              <span className="absolute left-3 top-3 text-gray-500">$</span>
+              <span className="absolute left-3 top-3 text-gray-500">DH</span>
               <Input
                 {...register("amount")}
                 type="number"

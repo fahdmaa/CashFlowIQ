@@ -37,8 +37,10 @@ export default function FinancialOverview() {
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
-      currency: "USD",
-    }).format(amount);
+      currency: "MAD",
+    })
+      .format(amount)
+      .replace("MAD", "DH");
   };
 
   return (
@@ -58,7 +60,9 @@ export default function FinancialOverview() {
           </div>
           <div className="flex items-center mt-4">
             <span className="text-sm text-secondary font-medium" data-testid="text-balance-change">
-              {overview?.currentBalance > 0 ? `+${formatCurrency(Math.abs(overview.currentBalance))}` : formatCurrency(overview?.currentBalance || 0)} this month
+              {(overview?.currentBalance || 0) > 0
+                ? `+${formatCurrency(Math.abs(overview?.currentBalance || 0))}`
+                : formatCurrency(overview?.currentBalance || 0)} this month
             </span>
           </div>
         </CardContent>

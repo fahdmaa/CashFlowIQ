@@ -62,8 +62,10 @@ export default function RecentTransactions() {
   const formatCurrency = (amount: string) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
-      currency: "USD",
-    }).format(parseFloat(amount));
+      currency: "MAD",
+    })
+      .format(parseFloat(amount))
+      .replace("MAD", "DH");
   };
 
   const formatDate = (date: string) => {
