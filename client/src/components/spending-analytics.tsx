@@ -14,7 +14,7 @@ export default function SpendingAnalytics() {
 
   if (isLoading) {
     return (
-      <Card className="bg-white rounded-xl shadow-sm border border-gray-200">
+      <Card className="rounded-xl">
         <CardHeader className="pb-6">
           <div className="flex items-center justify-between">
             <Skeleton className="h-7 w-40" />
@@ -39,7 +39,7 @@ export default function SpendingAnalytics() {
   }));
 
   return (
-    <Card className="bg-white rounded-xl shadow-sm border border-gray-200">
+    <Card className="rounded-xl">
       <CardHeader className="pb-6">
         <div className="flex items-center justify-between">
           <CardTitle className="text-xl font-semibold text-foreground">Spending Analytics</CardTitle>
@@ -79,18 +79,18 @@ export default function SpendingAnalytics() {
         <div className="h-64" data-testid="chart-spending-analytics">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
               <XAxis 
                 dataKey="date" 
                 axisLine={false}
                 tickLine={false}
-                tick={{ fontSize: 12, fill: '#6B7280' }}
+                tick={{ fontSize: 12, fill: 'var(--muted-foreground)' }}
               />
-              <YAxis 
+              <YAxis
                 axisLine={false}
                 tickLine={false}
-                tick={{ fontSize: 12, fill: '#6B7280' }}
-                tickFormatter={(value) => `$${value}`}
+                tick={{ fontSize: 12, fill: 'var(--muted-foreground)' }}
+                tickFormatter={(value) => `${value} DH`}
               />
               <Line 
                 type="monotone" 

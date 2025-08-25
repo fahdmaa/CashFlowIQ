@@ -1,0 +1,116 @@
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import * as Icons from "lucide-react";
+
+const formSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  type: z.enum(["income", "expense"]),
+  color: z.string().min(1),
+  icon: z.string().min(1),
+});
+
+type FormData = z.infer<typeof formSchema>;
+
+const iconOptions = ["Utensils", "Car", "Gamepad2", "ShoppingBag", "Home", "Coffee", "Wallet", "PiggyBank"];
+
+interface AddCategoryModalProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+export default function AddCategoryModal({ open, onOpenChange }: AddCategoryModalProps) {
+  const queryClient = useQueryClient();
+  const { register, handleSubmit, setValue, reset } = useForm<FormData>({
+    defaultValues: { type: "expense", color: "#000000", icon: "Utensils" },
+  });
+
+  const mutation = useMutation({
+    mutationFn: async (data: FormData) => {
+      const res = await apiRequest("POST", "/api/categories", data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/categories"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/budgets"] });
+      reset();
+      onOpenChange(false);
+    },
+  });
+
+  const onSubmit = (data: FormData) => {
+    mutation.mutate(data);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Add Category</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <div>
+            <Label htmlFor="name">Name</Label>
+            <Input id="name" {...register("name")}/>
+          </div>
+          <div>
+            <Label>Type</Label>
+            <RadioGroup defaultValue="expense" onValueChange={(v) => setValue("type", v as "income" | "expense")}> 
+              <div className="flex space-x-4">
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="expense" id="type-expense" />
+                  <Label htmlFor="type-expense">Expense</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="income" id="type-income" />
+                  <Label htmlFor="type-income">Income</Label>
+                </div>
+              </div>
+            </RadioGroup>
+          </div>
+          <div>
+            <Label htmlFor="color">Color</Label>
+            <Input type="color" id="color" {...register("color")}/>
+          </div>
+          <div>
+            <Label>Icon</Label>
+            <Select defaultValue="Utensils" onValueChange={(v) => setValue("icon", v)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {iconOptions.map((icon) => {
+                  const IconComponent = (Icons as any)[icon];
+                  return (
+                    <SelectItem key={icon} value={icon}>
+                      <div className="flex items-center space-x-2">
+                        <IconComponent className="h-4 w-4" />
+                        <span>{icon}</span>
+                      </div>
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex space-x-2 pt-4">
+            <Button type="button" variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" className="flex-1" disabled={mutation.isPending}>
+              {mutation.isPending ? "Adding..." : "Add Category"}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+

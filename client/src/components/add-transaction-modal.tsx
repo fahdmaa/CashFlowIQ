@@ -8,7 +8,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertTransactionSchema } from "@shared/schema";
 import { z } from "zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { categorizeTransaction } from "@/lib/categorization";
@@ -33,6 +33,7 @@ export default function AddTransactionModal({ isOpen, onClose }: AddTransactionM
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [suggestedCategory, setSuggestedCategory] = useState<string>("");
+  const { data: categories } = useQuery<any[]>({ queryKey: ["/api/categories"] });
 
   const {
     register,
@@ -51,15 +52,22 @@ export default function AddTransactionModal({ isOpen, onClose }: AddTransactionM
   });
 
   const watchedDescription = watch("description");
+  const watchedType = watch("type");
 
   // Auto-categorization when description changes
   useEffect(() => {
-    if (watchedDescription && watchedDescription.length > 2) {
+    if (watchedType === "expense" && watchedDescription && watchedDescription.length > 2) {
       const suggested = categorizeTransaction(watchedDescription);
       setSuggestedCategory(suggested);
       setValue("category", suggested);
     }
-  }, [watchedDescription, setValue]);
+  }, [watchedDescription, watchedType, setValue]);
+
+  useEffect(() => {
+    if (watchedType === "income") {
+      setValue("category", "Income");
+    }
+  }, [watchedType, setValue]);
 
   const createTransactionMutation = useMutation({
     mutationFn: async (data: TransactionForm) => {
@@ -111,7 +119,7 @@ export default function AddTransactionModal({ isOpen, onClose }: AddTransactionM
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div>
-            <Label className="text-sm font-medium text-gray-700 mb-2 block">Type</Label>
+            <Label className="text-sm font-medium text-foreground mb-2 block">Type</Label>
             <RadioGroup defaultValue="expense" onValueChange={(value) => setValue("type", value as "income" | "expense")}>
               <div className="flex space-x-4">
                 <div className="flex items-center space-x-2">
@@ -127,9 +135,9 @@ export default function AddTransactionModal({ isOpen, onClose }: AddTransactionM
           </div>
 
           <div>
-            <Label htmlFor="amount" className="text-sm font-medium text-gray-700 mb-2 block">Amount</Label>
+            <Label htmlFor="amount" className="text-sm font-medium text-foreground mb-2 block">Amount</Label>
             <div className="relative">
-              <span className="absolute left-3 top-3 text-gray-500">$</span>
+              <span className="absolute left-3 top-3 text-muted-foreground">DH</span>
               <Input
                 {...register("amount")}
                 type="number"
@@ -145,7 +153,7 @@ export default function AddTransactionModal({ isOpen, onClose }: AddTransactionM
           </div>
 
           <div>
-            <Label htmlFor="description" className="text-sm font-medium text-gray-700 mb-2 block">Description</Label>
+            <Label htmlFor="description" className="text-sm font-medium text-foreground mb-2 block">Description</Label>
             <Input
               {...register("description")}
               placeholder="What was this transaction for?"
@@ -156,31 +164,30 @@ export default function AddTransactionModal({ isOpen, onClose }: AddTransactionM
             )}
           </div>
 
-          <div>
-            <Label htmlFor="category" className="text-sm font-medium text-gray-700 mb-2 block">Category</Label>
-            <Select onValueChange={(value) => setValue("category", value)} value={getValues("category")}>
-              <SelectTrigger data-testid="select-category">
-                <SelectValue placeholder="Select category" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Food & Dining">Food & Dining</SelectItem>
-                <SelectItem value="Transportation">Transportation</SelectItem>
-                <SelectItem value="Entertainment">Entertainment</SelectItem>
-                <SelectItem value="Shopping">Shopping</SelectItem>
-                <SelectItem value="Bills & Utilities">Bills & Utilities</SelectItem>
-                <SelectItem value="Income">Income</SelectItem>
-              </SelectContent>
-            </Select>
-            {suggestedCategory && (
-              <p className="text-sm text-primary mt-1">Suggested: {suggestedCategory}</p>
-            )}
-            {errors.category && (
-              <p className="text-sm text-destructive mt-1">{errors.category.message}</p>
-            )}
-          </div>
+          {watchedType === "expense" && (
+            <div>
+              <Label htmlFor="category" className="text-sm font-medium text-foreground mb-2 block">Category</Label>
+              <Select onValueChange={(value) => setValue("category", value)} value={getValues("category")}>
+                <SelectTrigger data-testid="select-category">
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories?.filter(c => c.type === "expense").map(c => (
+                    <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {suggestedCategory && (
+                <p className="text-sm text-primary mt-1">Suggested: {suggestedCategory}</p>
+              )}
+              {errors.category && (
+                <p className="text-sm text-destructive mt-1">{errors.category.message}</p>
+              )}
+            </div>
+          )}
 
           <div>
-            <Label htmlFor="date" className="text-sm font-medium text-gray-700 mb-2 block">Date</Label>
+            <Label htmlFor="date" className="text-sm font-medium text-foreground mb-2 block">Date</Label>
             <Input
               {...register("date")}
               type="date"
