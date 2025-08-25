@@ -37,17 +37,19 @@ export default function FinancialOverview() {
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
-      currency: "USD",
-    }).format(amount);
+      currency: "MAD",
+    })
+      .format(amount)
+      .replace("MAD", "DH");
   };
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-      <Card className="bg-white rounded-xl shadow-sm border border-gray-200">
+      <Card className="rounded-xl">
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Current Balance</p>
+              <p className="text-sm font-medium text-muted-foreground">Current Balance</p>
               <p className="text-2xl font-bold text-foreground" data-testid="text-current-balance">
                 {formatCurrency(overview?.currentBalance || 0)}
               </p>
@@ -58,17 +60,19 @@ export default function FinancialOverview() {
           </div>
           <div className="flex items-center mt-4">
             <span className="text-sm text-secondary font-medium" data-testid="text-balance-change">
-              {overview?.currentBalance > 0 ? `+${formatCurrency(Math.abs(overview.currentBalance))}` : formatCurrency(overview?.currentBalance || 0)} this month
+              {(overview?.currentBalance || 0) > 0
+                ? `+${formatCurrency(Math.abs(overview?.currentBalance || 0))}`
+                : formatCurrency(overview?.currentBalance || 0)} this month
             </span>
           </div>
         </CardContent>
       </Card>
 
-      <Card className="bg-white rounded-xl shadow-sm border border-gray-200">
+      <Card className="rounded-xl">
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Monthly Income</p>
+              <p className="text-sm font-medium text-muted-foreground">Monthly Income</p>
               <p className="text-2xl font-bold text-foreground" data-testid="text-monthly-income">
                 {formatCurrency(overview?.monthlyIncome || 0)}
               </p>
@@ -83,11 +87,11 @@ export default function FinancialOverview() {
         </CardContent>
       </Card>
 
-      <Card className="bg-white rounded-xl shadow-sm border border-gray-200">
+      <Card className="rounded-xl">
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Monthly Spending</p>
+              <p className="text-sm font-medium text-muted-foreground">Monthly Spending</p>
               <p className="text-2xl font-bold text-foreground" data-testid="text-monthly-spending">
                 {formatCurrency(overview?.monthlySpending || 0)}
               </p>
@@ -104,11 +108,11 @@ export default function FinancialOverview() {
         </CardContent>
       </Card>
 
-      <Card className="bg-white rounded-xl shadow-sm border border-gray-200">
+      <Card className="rounded-xl">
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Savings Goal</p>
+              <p className="text-sm font-medium text-muted-foreground">Savings Goal</p>
               <p className="text-2xl font-bold text-foreground" data-testid="text-savings-progress">
                 {overview?.savingsProgress || 0}%
               </p>
@@ -117,9 +121,9 @@ export default function FinancialOverview() {
               <Target className="text-primary h-6 w-6" />
             </div>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-2 mt-4">
-            <div 
-              className="bg-primary h-2 rounded-full transition-all duration-300" 
+          <div className="w-full bg-muted rounded-full h-2 mt-4">
+            <div
+              className="bg-primary h-2 rounded-full transition-all duration-300"
               style={{ width: `${Math.min(overview?.savingsProgress || 0, 100)}%` }}
             />
           </div>

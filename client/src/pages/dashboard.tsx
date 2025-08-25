@@ -10,7 +10,7 @@ export default function Dashboard() {
   const [isAddTransactionOpen, setIsAddTransactionOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-cool-gray">
+    <div className="min-h-screen bg-background">
       <Header onAddTransaction={() => setIsAddTransactionOpen(true)} />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
