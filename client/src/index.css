@@ -99,10 +99,6 @@
   background-color: hsl(0 84.2105% 60.3922%);
 }
 
-.bg-cool-gray {
-  background-color: hsl(220 14% 96%);
-}
-
 .gradient-bg {
   background: linear-gradient(135deg, hsl(239 84% 67%) 0%, hsl(262 83% 58%) 100%);
 }

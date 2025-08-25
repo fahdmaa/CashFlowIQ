@@ -28,7 +28,7 @@ export default function SmartInsights() {
 
   if (isLoading) {
     return (
-      <Card className="bg-white rounded-xl shadow-sm border border-gray-200">
+      <Card className="rounded-xl">
         <CardHeader className="pb-6">
           <div className="flex items-center justify-between">
             <Skeleton className="h-7 w-32" />
@@ -38,7 +38,7 @@ export default function SmartInsights() {
         <CardContent>
           <div className="space-y-4">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="p-4 rounded-r-lg border-l-4 border-gray-200">
+              <div key={i} className="p-4 rounded-r-lg border-l-4 border-border">
                 <div className="flex items-start space-x-3">
                   <Skeleton className="w-5 h-5 mt-1" />
                   <div className="flex-1">
@@ -56,7 +56,7 @@ export default function SmartInsights() {
   }
 
   return (
-    <Card className="bg-white rounded-xl shadow-sm border border-gray-200">
+    <Card className="rounded-xl">
       <CardHeader className="pb-6">
         <div className="flex items-center justify-between">
           <CardTitle className="text-xl font-semibold text-foreground">Smart Insights</CardTitle>
@@ -69,7 +69,7 @@ export default function SmartInsights() {
       <CardContent>
         <div className="space-y-4">
           {insights?.length === 0 ? (
-            <div className="text-center py-8 text-gray-500" data-testid="text-no-insights">
+            <div className="text-center py-8 text-muted-foreground" data-testid="text-no-insights">
               No insights available yet. Add some transactions to get personalized insights!
             </div>
           ) : (
@@ -90,7 +90,7 @@ export default function SmartInsights() {
                       <p className="font-medium text-foreground" data-testid={`text-insight-title-${insight.id}`}>
                         {insight.title}
                       </p>
-                      <p className="text-sm text-gray-600 mt-1" data-testid={`text-insight-message-${insight.id}`}>
+                      <p className="text-sm text-muted-foreground mt-1" data-testid={`text-insight-message-${insight.id}`}>
                         {insight.message}
                       </p>
                     </div>

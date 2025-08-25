@@ -13,6 +13,7 @@ export interface IStorage {
   getBudgetByCategory(category: string): Promise<Budget | undefined>;
   createBudget(budget: InsertBudget): Promise<Budget>;
   updateBudgetSpent(category: string, amount: number): Promise<Budget | undefined>;
+  updateBudgetLimit(category: string, monthlyLimit: string): Promise<Budget | undefined>;
   
   // Insights
   getInsights(): Promise<Insight[]>;
@@ -115,6 +116,16 @@ export class MemStorage implements IStorage {
     if (budget) {
       const currentSpent = parseFloat(budget.currentSpent) + amount;
       budget.currentSpent = currentSpent.toFixed(2);
+      this.budgets.set(budget.id, budget);
+      return budget;
+    }
+    return undefined;
+  }
+
+  async updateBudgetLimit(category: string, monthlyLimit: string): Promise<Budget | undefined> {
+    const budget = await this.getBudgetByCategory(category);
+    if (budget) {
+      budget.monthlyLimit = parseFloat(monthlyLimit).toFixed(2);
       this.budgets.set(budget.id, budget);
       return budget;
     }
