@@ -103,13 +103,13 @@ export default function BudgetTracking() {
   return (
     <>
       <ManageBudgetsDialog open={open} onOpenChange={setOpen} />
-      <Card className="rounded-xl">
+      <Card className="rounded-xl animate-fadeIn hover-lift transition-all" style={{animationDelay: '200ms'}}>
         <CardHeader className="pb-6">
           <div className="flex items-center justify-between">
             <CardTitle className="text-xl font-semibold text-foreground">Budget Overview</CardTitle>
             <Button 
               variant="ghost" 
-              className="text-primary hover:text-primary/80 font-medium text-sm" 
+              className="text-primary hover:text-primary/80 font-medium text-sm transition-all hover:scale-105" 
               data-testid="button-manage-budgets" 
               onClick={() => setOpen(true)}
             >
@@ -119,18 +119,18 @@ export default function BudgetTracking() {
         </CardHeader>
         <CardContent>
           <div className="space-y-6">
-            {budgets?.map((budget: any) => {
+            {budgets?.map((budget: any, index: number) => {
               const category = categories?.find((c: any) => c.name === budget.category);
               const IconComponent = (Icons as any)[category?.icon] || (Icons as any)["Circle"];
               const progress = calculateProgress(budget.currentSpent, budget.monthlyLimit);
               const remaining = parseFloat(budget.monthlyLimit) - parseFloat(budget.currentSpent);
               
               return (
-                <div key={budget.id} className="space-y-3">
+                <div key={budget.id} className="space-y-3 animate-fadeIn" style={{animationDelay: `${300 + index * 100}ms`}}>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
                       <div
-                        className="w-10 h-10 rounded-lg flex items-center justify-center"
+                        className="w-10 h-10 rounded-lg flex items-center justify-center transition-transform hover:scale-110"
                         style={{ backgroundColor: `${category?.color || "#3b82f6"}20`, color: category?.color || "#3b82f6" }}
                       >
                         <IconComponent className="h-5 w-5" />
@@ -183,7 +183,7 @@ export default function BudgetTracking() {
                   </div>
                   <div className="w-full bg-muted rounded-full h-2">
                     <div
-                      className={`h-2 rounded-full transition-all duration-300 ${getProgressColor(budget.currentSpent, budget.monthlyLimit)}`}
+                      className={`h-2 rounded-full transition-all duration-500 ${getProgressColor(budget.currentSpent, budget.monthlyLimit)}`}
                       style={{ width: `${Math.min(progress, 100)}%` }}
                     />
                   </div>

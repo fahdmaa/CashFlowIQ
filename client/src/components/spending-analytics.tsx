@@ -39,7 +39,7 @@ export default function SpendingAnalytics() {
   }));
 
   return (
-    <Card className="rounded-xl">
+    <Card className="rounded-xl animate-fadeIn hover-lift transition-all" style={{animationDelay: '300ms'}}>
       <CardHeader className="pb-6">
         <div className="flex items-center justify-between">
           <CardTitle className="text-xl font-semibold text-foreground">Spending Analytics</CardTitle>
@@ -48,7 +48,7 @@ export default function SpendingAnalytics() {
               size="sm"
               variant={selectedPeriod === 7 ? "default" : "outline"}
               onClick={() => setSelectedPeriod(7)}
-              className={selectedPeriod === 7 ? "bg-primary text-white" : ""}
+              className={`transition-all hover:scale-105 ${selectedPeriod === 7 ? "bg-primary text-white" : ""}`}
               data-testid="button-period-7days"
             >
               7 Days
@@ -57,7 +57,7 @@ export default function SpendingAnalytics() {
               size="sm"
               variant={selectedPeriod === 30 ? "default" : "outline"}
               onClick={() => setSelectedPeriod(30)}
-              className={selectedPeriod === 30 ? "bg-primary text-white" : ""}
+              className={`transition-all hover:scale-105 ${selectedPeriod === 30 ? "bg-primary text-white" : ""}`}
               data-testid="button-period-30days"
             >
               30 Days
@@ -66,7 +66,7 @@ export default function SpendingAnalytics() {
               size="sm"
               variant={selectedPeriod === 90 ? "default" : "outline"}
               onClick={() => setSelectedPeriod(90)}
-              className={selectedPeriod === 90 ? "bg-primary text-white" : ""}
+              className={`transition-all hover:scale-105 ${selectedPeriod === 90 ? "bg-primary text-white" : ""}`}
               data-testid="button-period-90days"
             >
               90 Days

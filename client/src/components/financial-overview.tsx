@@ -45,7 +45,7 @@ export default function FinancialOverview() {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-      <Card className="rounded-xl">
+      <Card className="rounded-xl animate-fadeIn hover-lift transition-all" style={{animationDelay: '0ms'}}>
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div>
@@ -54,7 +54,7 @@ export default function FinancialOverview() {
                 {formatCurrency(overview?.currentBalance || 0)}
               </p>
             </div>
-            <div className="w-12 h-12 bg-secondary/10 rounded-lg flex items-center justify-center">
+            <div className="w-12 h-12 bg-secondary/10 rounded-lg flex items-center justify-center transition-transform hover:scale-110">
               <Wallet className="text-secondary h-6 w-6" />
             </div>
           </div>
@@ -68,7 +68,7 @@ export default function FinancialOverview() {
         </CardContent>
       </Card>
 
-      <Card className="rounded-xl">
+      <Card className="rounded-xl animate-fadeIn hover-lift transition-all" style={{animationDelay: '100ms'}}>
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div>
@@ -77,7 +77,7 @@ export default function FinancialOverview() {
                 {formatCurrency(overview?.monthlyIncome || 0)}
               </p>
             </div>
-            <div className="w-12 h-12 bg-secondary/10 rounded-lg flex items-center justify-center">
+            <div className="w-12 h-12 bg-secondary/10 rounded-lg flex items-center justify-center transition-transform hover:scale-110">
               <TrendingUp className="text-secondary h-6 w-6" />
             </div>
           </div>
@@ -87,7 +87,7 @@ export default function FinancialOverview() {
         </CardContent>
       </Card>
 
-      <Card className="rounded-xl">
+      <Card className="rounded-xl animate-fadeIn hover-lift transition-all" style={{animationDelay: '200ms'}}>
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div>
@@ -96,7 +96,7 @@ export default function FinancialOverview() {
                 {formatCurrency(overview?.monthlySpending || 0)}
               </p>
             </div>
-            <div className="w-12 h-12 bg-warning/10 rounded-lg flex items-center justify-center">
+            <div className="w-12 h-12 bg-warning/10 rounded-lg flex items-center justify-center transition-transform hover:scale-110">
               <TrendingDown className="text-warning h-6 w-6" />
             </div>
           </div>
@@ -108,7 +108,7 @@ export default function FinancialOverview() {
         </CardContent>
       </Card>
 
-      <Card className="rounded-xl">
+      <Card className="rounded-xl animate-fadeIn hover-lift transition-all" style={{animationDelay: '300ms'}}>
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div>
@@ -117,13 +117,13 @@ export default function FinancialOverview() {
                 {overview?.savingsProgress || 0}%
               </p>
             </div>
-            <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
+            <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center transition-transform hover:scale-110">
               <Target className="text-primary h-6 w-6" />
             </div>
           </div>
           <div className="w-full bg-muted rounded-full h-2 mt-4">
             <div
-              className="bg-primary h-2 rounded-full transition-all duration-300"
+              className="bg-primary h-2 rounded-full transition-all duration-500 animate-pulse"
               style={{ width: `${Math.min(overview?.savingsProgress || 0, 100)}%` }}
             />
           </div>

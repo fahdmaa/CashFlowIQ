@@ -71,13 +71,13 @@ export default function RecentTransactions() {
   const recentTransactions = transactions?.slice(0, 5) || [];
 
   return (
-    <Card className="rounded-xl">
+    <Card className="rounded-xl animate-fadeIn hover-lift transition-all" style={{animationDelay: '400ms'}}>
       <CardHeader className="pb-6">
         <div className="flex items-center justify-between">
           <CardTitle className="text-xl font-semibold text-foreground">Recent Transactions</CardTitle>
           <Button 
             variant="ghost" 
-            className="text-primary hover:text-primary/80 font-medium text-sm" 
+            className="text-primary hover:text-primary/80 font-medium text-sm transition-all hover:scale-105" 
             data-testid="button-view-all-transactions"
           >
             View All
@@ -88,23 +88,24 @@ export default function RecentTransactions() {
       <CardContent>
         <div className="space-y-4">
           {recentTransactions.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground" data-testid="text-no-transactions">
+            <div className="text-center py-8 text-muted-foreground animate-fadeIn" data-testid="text-no-transactions">
               No transactions yet. Add your first transaction to get started!
             </div>
           ) : (
-            recentTransactions.map((transaction: any) => {
+            recentTransactions.map((transaction: any, index: number) => {
               const category = categories?.find((c: any) => c.name === transaction.category);
               const IconComponent = (Icons as any)[category?.icon] || (Icons as any)["Circle"];
               
               return (
                 <div 
                   key={transaction.id} 
-                  className="flex items-center justify-between p-3 hover:bg-accent rounded-lg transition-colors"
+                  className="flex items-center justify-between p-3 hover:bg-accent rounded-lg transition-all hover:scale-[1.01] animate-slideInLeft"
+                  style={{animationDelay: `${500 + index * 50}ms`}}
                   data-testid={`transaction-${transaction.id}`}
                 >
                   <div className="flex items-center space-x-3">
                     <div
-                      className="w-10 h-10 rounded-lg flex items-center justify-center"
+                      className="w-10 h-10 rounded-lg flex items-center justify-center transition-transform hover:scale-110"
                       style={{ backgroundColor: `${category?.color || "#3b82f6"}20`, color: category?.color || "#3b82f6" }}
                     >
                       <IconComponent className="h-5 w-5" />
