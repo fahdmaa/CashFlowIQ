@@ -1,31 +1,19 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Utensils, Car, Gamepad2, ShoppingBag, Zap, AlertTriangle, TrendingUp, BarChart3 } from "lucide-react";
-
-const categoryIcons = {
-  "Food & Dining": Utensils,
-  "Transportation": Car,
-  "Entertainment": Gamepad2,
-  "Shopping": ShoppingBag,
-  "Bills & Utilities": Zap,
-};
-
-const categoryColors = {
-  "Food & Dining": "bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300",
-  "Transportation": "bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300",
-  "Entertainment": "bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300",
-  "Shopping": "bg-rose-50 text-rose-700 dark:bg-rose-950 dark:text-rose-300",
-  "Bills & Utilities": "bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300",
-};
+import { AlertTriangle, TrendingUp, BarChart3 } from "lucide-react";
+import * as Icons from "lucide-react";
+import { useState } from "react";
+import ManageBudgetsDialog from "@/components/manage-budgets-dialog";
 
 export default function BudgetTracking() {
   const { data: budgets, isLoading } = useQuery<any[]>({
     queryKey: ["/api/budgets"],
   });
+  const { data: categories } = useQuery<any[]>({ queryKey: ["/api/categories"] });
+  const [open, setOpen] = useState(false);
 
   const { data: insights } = useQuery<any[]>({
     queryKey: ["/api/insights"],
@@ -49,7 +37,7 @@ export default function BudgetTracking() {
 
   if (isLoading) {
     return (
-      <Card className="bg-white rounded-xl shadow-sm border border-gray-200">
+      <Card className="rounded-xl">
         <CardHeader className="pb-6">
           <div className="flex items-center justify-between">
             <Skeleton className="h-7 w-40" />
@@ -85,8 +73,10 @@ export default function BudgetTracking() {
   const formatCurrency = (amount: string) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
-      currency: "USD",
-    }).format(parseFloat(amount));
+      currency: "MAD",
+    })
+      .format(parseFloat(amount))
+      .replace("MAD", "DH");
   };
 
   const calculateProgress = (spent: string, limit: string) => {
@@ -111,21 +101,23 @@ export default function BudgetTracking() {
   };
 
   return (
-    <Card className="bg-white rounded-xl shadow-sm border border-gray-200">
-      <CardHeader className="pb-6">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-xl font-semibold text-foreground">Budget Overview</CardTitle>
-          <Button variant="ghost" className="text-primary hover:text-primary/80 font-medium text-sm" data-testid="button-manage-budgets">
+    <>
+      <ManageBudgetsDialog open={open} onOpenChange={setOpen} />
+      <Card className="rounded-xl">
+        <CardHeader className="pb-6">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-xl font-semibold text-foreground">Budget Overview</CardTitle>
+          <Button variant="ghost" className="text-primary hover:text-primary/80 font-medium text-sm" data-testid="button-manage-budgets" onClick={() => setOpen(true)}>
             Manage Budgets
           </Button>
-        </div>
-      </CardHeader>
+          </div>
+        </CardHeader>
       
       <CardContent>
         <div className="space-y-6">
           {budgets?.map((budget: any) => {
-            const IconComponent = categoryIcons[budget.category as keyof typeof categoryIcons] || Utensils;
-            const iconColor = categoryColors[budget.category as keyof typeof categoryColors] || "bg-blue-100 text-blue-600";
+            const category = categories?.find((c: any) => c.name === budget.category);
+            const IconComponent = (Icons as any)[category?.icon] || (Icons as any)["Circle"];
             const progress = calculateProgress(budget.currentSpent, budget.monthlyLimit);
             const remaining = parseFloat(budget.monthlyLimit) - parseFloat(budget.currentSpent);
             
@@ -133,7 +125,10 @@ export default function BudgetTracking() {
               <div key={budget.id} className="space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
-                    <div className={`w-10 h-10 ${iconColor} rounded-lg flex items-center justify-center`}>
+                    <div
+                      className="w-10 h-10 rounded-lg flex items-center justify-center"
+                      style={{ backgroundColor: `${category?.color || "#3b82f6"}20`, color: category?.color || "#3b82f6" }}
+                    >
                       <IconComponent className="h-5 w-5" />
                     </div>
                     <div className="flex-1">
@@ -174,13 +169,13 @@ export default function BudgetTracking() {
                     <p className={`font-semibold ${getRemainingColor(budget.currentSpent, budget.monthlyLimit)}`} data-testid={`text-remaining-${budget.category.toLowerCase().replace(/\s+/g, '-')}`}>
                       {remaining < 0 ? `-${formatCurrency(Math.abs(remaining).toString())}` : formatCurrency(remaining.toString())}
                     </p>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-muted-foreground">
                       {remaining < 0 ? "over budget" : "remaining"}
                     </p>
                   </div>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div 
+                <div className="w-full bg-muted rounded-full h-2">
+                  <div
                     className={`h-2 rounded-full transition-all duration-300 ${getProgressColor(budget.currentSpent, budget.monthlyLimit)}`}
                     style={{ width: `${Math.min(progress, 100)}%` }}
                   />
@@ -190,6 +185,7 @@ export default function BudgetTracking() {
           })}
         </div>
       </CardContent>
-    </Card>
+      </Card>
+    </>
   );
 }
