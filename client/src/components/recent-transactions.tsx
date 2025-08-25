@@ -75,7 +75,11 @@ export default function RecentTransactions() {
       <CardHeader className="pb-6">
         <div className="flex items-center justify-between">
           <CardTitle className="text-xl font-semibold text-foreground">Recent Transactions</CardTitle>
-          <Button variant="ghost" className="text-primary hover:text-primary/80 font-medium text-sm" data-testid="button-view-all-transactions">
+          <Button 
+            variant="ghost" 
+            className="text-primary hover:text-primary/80 font-medium text-sm" 
+            data-testid="button-view-all-transactions"
+          >
             View All
           </Button>
         </div>

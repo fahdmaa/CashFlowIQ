@@ -7,7 +7,7 @@ import { useState } from "react";
 
 export default function SpendingAnalytics() {
   const [selectedPeriod, setSelectedPeriod] = useState(7);
-  
+
   const { data: spendingData, isLoading } = useQuery({
     queryKey: ["/api/analytics/spending", { days: selectedPeriod }],
   });
@@ -74,14 +74,14 @@ export default function SpendingAnalytics() {
           </div>
         </div>
       </CardHeader>
-      
+
       <CardContent>
         <div className="h-64" data-testid="chart-spending-analytics">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-              <XAxis 
-                dataKey="date" 
+              <XAxis
+                dataKey="date"
                 axisLine={false}
                 tickLine={false}
                 tick={{ fontSize: 12, fill: 'var(--muted-foreground)' }}
@@ -92,17 +92,17 @@ export default function SpendingAnalytics() {
                 tick={{ fontSize: 12, fill: 'var(--muted-foreground)' }}
                 tickFormatter={(value) => `${value} DH`}
               />
-              <Line 
-                type="monotone" 
-                dataKey="spending" 
-                stroke="hsl(247.0588 88.8889% 70.1961%)" 
+              <Line
+                type="monotone"
+                dataKey="spending"
+                stroke="hsl(247.0588 88.8889% 70.1961%)"
                 strokeWidth={3}
                 fill="rgba(99, 102, 241, 0.1)"
-                dot={{ 
-                  fill: "hsl(247.0588 88.8889% 70.1961%)", 
-                  stroke: "#ffffff", 
-                  strokeWidth: 2, 
-                  r: 5 
+                dot={{
+                  fill: "hsl(247.0588 88.8889% 70.1961%)",
+                  stroke: "#ffffff",
+                  strokeWidth: 2,
+                  r: 5
                 }}
               />
             </LineChart>
