@@ -4,10 +4,11 @@ import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import * as Icons from "lucide-react";
-import { PiggyBank, Target, AlertTriangle, TrendingUp, Settings, Plus } from "lucide-react";
+import { PiggyBank, Target, AlertTriangle, TrendingUp, Settings, Plus, PieChart } from "lucide-react";
 import Header from "@/components/header";
 import ManageBudgetsDialog from "@/components/manage-budgets-dialog";
 import { Progress } from "@/components/ui/progress";
+import { PieChart as RechartsChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
 
 export default function Budgets() {
   const [isManageBudgetsOpen, setIsManageBudgetsOpen] = useState(false);
@@ -205,29 +206,108 @@ export default function Budgets() {
           </CardContent>
         </Card>
 
-        {/* Budgets List */}
-        <Card className="rounded-xl animate-fadeIn" style={{animationDelay: '500ms'}}>
-          <CardHeader className="pb-6">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-xl font-semibold text-foreground">Budget Categories</CardTitle>
-              <Button
-                onClick={() => setIsManageBudgetsOpen(true)}
-                className="bg-primary text-white hover:bg-primary/90 transition-all hover:scale-105"
-              >
-                <Settings className="h-4 w-4 mr-2" />
-                Manage Budgets
-              </Button>
-            </div>
-          </CardHeader>
-          
-          <CardContent>
-            <div className="space-y-6">
+        {/* Budget Chart and List */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Donut Chart */}
+          <Card className="rounded-xl animate-fadeIn hover-lift transition-all" style={{animationDelay: '500ms'}}>
+            <CardHeader className="pb-4">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg font-semibold text-foreground">Budget Distribution</CardTitle>
+                <PieChart className="h-5 w-5 text-muted-foreground" />
+              </div>
+            </CardHeader>
+            <CardContent>
               {!budgets || budgets.length === 0 ? (
-                <div className="text-center py-12 text-muted-foreground">
-                  No budgets set up yet. Click "Manage Budgets" to get started!
+                <div className="h-64 flex items-center justify-center text-muted-foreground">
+                  No budget data available
                 </div>
               ) : (
-                budgets.map((budget: any, index: number) => {
+                <div className="h-80">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <RechartsChart>
+                      <Pie
+                        data={budgets.map((budget: any) => {
+                          const category = categories?.find((c: any) => c.name === budget.category);
+                          return {
+                            name: budget.category,
+                            value: parseFloat(budget.monthlyLimit),
+                            spent: parseFloat(budget.currentSpent),
+                            color: category?.color || "#3b82f6"
+                          };
+                        })}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={60}
+                        outerRadius={100}
+                        paddingAngle={2}
+                        dataKey="value"
+                      >
+                        {budgets.map((budget: any, index: number) => {
+                          const category = categories?.find((c: any) => c.name === budget.category);
+                          return (
+                            <Cell 
+                              key={`cell-${index}`} 
+                              fill={category?.color || "#3b82f6"}
+                              className="hover:opacity-80 transition-opacity cursor-pointer"
+                            />
+                          );
+                        })}
+                      </Pie>
+                      <Tooltip 
+                        formatter={(value: any) => formatCurrency(value)}
+                        contentStyle={{
+                          backgroundColor: 'var(--background)',
+                          border: '1px solid var(--border)',
+                          borderRadius: '8px',
+                        }}
+                      />
+                      <Legend 
+                        verticalAlign="bottom" 
+                        height={36}
+                        formatter={(value: any) => {
+                          const budget = budgets.find((b: any) => b.category === value);
+                          const percentage = ((parseFloat(budget.monthlyLimit) / totals.totalBudget) * 100).toFixed(0);
+                          return `${value} (${percentage}%)`;
+                        }}
+                      />
+                    </RechartsChart>
+                  </ResponsiveContainer>
+                  
+                  {/* Center text */}
+                  <div className="relative -mt-52 pointer-events-none">
+                    <div className="text-center">
+                      <p className="text-sm text-muted-foreground">Total Budget</p>
+                      <p className="text-2xl font-bold text-foreground">{formatCurrency(totals.totalBudget)}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Budgets List */}
+          <Card className="rounded-xl animate-fadeIn lg:col-span-2" style={{animationDelay: '600ms'}}>
+            <CardHeader className="pb-6">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-xl font-semibold text-foreground">Budget Details</CardTitle>
+                <Button
+                  onClick={() => setIsManageBudgetsOpen(true)}
+                  className="bg-primary text-white hover:bg-primary/90 transition-all hover:scale-105"
+                >
+                  <Settings className="h-4 w-4 mr-2" />
+                  Manage Budgets
+                </Button>
+              </div>
+            </CardHeader>
+            
+            <CardContent>
+              <div className="space-y-6">
+                {!budgets || budgets.length === 0 ? (
+                  <div className="text-center py-12 text-muted-foreground">
+                    No budgets set up yet. Click "Manage Budgets" to get started!
+                  </div>
+                ) : (
+                  budgets.map((budget: any, index: number) => {
                   const category = categories?.find((c: any) => c.name === budget.category);
                   const IconComponent = (Icons as any)[category?.icon] || (Icons as any)["Circle"];
                   const progress = (parseFloat(budget.currentSpent) / parseFloat(budget.monthlyLimit)) * 100;
@@ -322,6 +402,7 @@ export default function Budgets() {
             </div>
           </CardContent>
         </Card>
+        </div>
       </main>
 
       <ManageBudgetsDialog 
