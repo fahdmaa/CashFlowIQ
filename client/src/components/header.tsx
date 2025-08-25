@@ -1,4 +1,4 @@
-import { ChartLine, Plus, User, Moon, Sun } from "lucide-react";
+import { Plus, User, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 
@@ -30,9 +30,11 @@ export default function Header({ onAddTransaction }: HeaderProps) {
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center space-x-8">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 gradient-bg rounded-lg flex items-center justify-center">
-                <ChartLine className="text-white h-5 w-5" />
-              </div>
+              <img 
+                src="/budgetwise-logo.png" 
+                alt="BudgetWise Logo" 
+                className="w-10 h-10 object-contain"
+              />
               <h1 className="text-2xl font-bold text-foreground">BudgetWise</h1>
             </div>
             <nav className="hidden md:flex space-x-8">
