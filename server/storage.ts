@@ -176,7 +176,7 @@ export class MemStorage implements IStorage {
     );
   }
 
-  async createInsight(insertInsight: InsertInsight): Promise<Insight> {
+  async createInsight(insertInsight: InsightInsert): Promise<Insight> {
     const id = randomUUID();
     const insight: Insight = {
       ...insertInsight,

@@ -220,7 +220,7 @@ export default function AddTransactionModal({ isOpen, onClose }: AddTransactionM
               data-testid="input-date"
             />
             {errors.date && (
-              <p className="text-sm text-destructive mt-1">{errors.date.message}</p>
+              <p className="text-sm text-descriptive mt-1">{errors.date.message}</p>
             )}
           </div>
 
