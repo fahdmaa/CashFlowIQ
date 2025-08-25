@@ -80,8 +80,6 @@ export default function SpendingAnalytics() {
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-              <XAxis 
-                dataKey="date" 
               <XAxis
                 dataKey="date"
                 axisLine={false}
