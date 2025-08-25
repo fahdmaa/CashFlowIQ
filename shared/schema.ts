@@ -34,6 +34,8 @@ export const insights = pgTable("insights", {
 export const insertTransactionSchema = createInsertSchema(transactions).omit({
   id: true,
   createdAt: true,
+}).extend({
+  date: z.coerce.date(),
 });
 
 export const insertBudgetSchema = createInsertSchema(budgets).omit({
