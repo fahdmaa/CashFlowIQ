@@ -22,7 +22,7 @@ const iconColors = {
 };
 
 export default function SmartInsights() {
-  const { data: insights, isLoading } = useQuery({
+  const { data: insights, isLoading } = useQuery<any[]>({
     queryKey: ["/api/insights"],
   });
 

@@ -12,7 +12,7 @@ export default function Header({ onAddTransaction }: HeaderProps) {
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center space-x-8">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-primary to-purple-600 rounded-lg flex items-center justify-center">
+              <div className="w-10 h-10 gradient-bg rounded-lg flex items-center justify-center">
                 <ChartLine className="text-white h-5 w-5" />
               </div>
               <h1 className="text-2xl font-bold text-foreground">BudgetWise</h1>

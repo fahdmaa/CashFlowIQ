@@ -4,7 +4,12 @@ import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function FinancialOverview() {
-  const { data: overview, isLoading } = useQuery({
+  const { data: overview, isLoading } = useQuery<{
+    currentBalance: number;
+    monthlyIncome: number;
+    monthlySpending: number;
+    savingsProgress: number;
+  }>({
     queryKey: ["/api/analytics/overview"],
   });
 

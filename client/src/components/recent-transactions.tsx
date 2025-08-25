@@ -23,7 +23,7 @@ const categoryColors = {
 };
 
 export default function RecentTransactions() {
-  const { data: transactions, isLoading } = useQuery({
+  const { data: transactions, isLoading } = useQuery<any[]>({
     queryKey: ["/api/transactions"],
   });
 

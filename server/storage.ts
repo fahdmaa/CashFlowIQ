@@ -133,6 +133,8 @@ export class MemStorage implements IStorage {
     const insight: Insight = {
       ...insertInsight,
       id,
+      category: insertInsight.category || null,
+      isRead: insertInsight.isRead || "false",
       createdAt: new Date(),
     };
     this.insights.set(id, insight);

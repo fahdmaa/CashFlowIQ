@@ -3,7 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Utensils, Car, Gamepad2, ShoppingBag, Zap } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Utensils, Car, Gamepad2, ShoppingBag, Zap, AlertTriangle, TrendingUp, BarChart3 } from "lucide-react";
 
 const categoryIcons = {
   "Food & Dining": Utensils,
@@ -14,17 +15,37 @@ const categoryIcons = {
 };
 
 const categoryColors = {
-  "Food & Dining": "bg-blue-100 text-blue-600",
-  "Transportation": "bg-purple-100 text-purple-600",
-  "Entertainment": "bg-green-100 text-green-600",
-  "Shopping": "bg-red-100 text-red-600",
-  "Bills & Utilities": "bg-yellow-100 text-yellow-600",
+  "Food & Dining": "bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300",
+  "Transportation": "bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300",
+  "Entertainment": "bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300",
+  "Shopping": "bg-rose-50 text-rose-700 dark:bg-rose-950 dark:text-rose-300",
+  "Bills & Utilities": "bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300",
 };
 
 export default function BudgetTracking() {
-  const { data: budgets, isLoading } = useQuery({
+  const { data: budgets, isLoading } = useQuery<any[]>({
     queryKey: ["/api/budgets"],
   });
+
+  const { data: insights } = useQuery<any[]>({
+    queryKey: ["/api/insights"],
+  });
+
+  const getInsightForCategory = (category: string) => {
+    return insights?.find(insight => insight.category === category && insight.isRead === "false");
+  };
+
+  const insightIcons = {
+    warning: AlertTriangle,
+    success: TrendingUp,
+    info: BarChart3,
+  };
+
+  const insightColors = {
+    warning: "text-warning",
+    success: "text-secondary",
+    info: "text-primary",
+  };
 
   if (isLoading) {
     return (
@@ -115,11 +136,36 @@ export default function BudgetTracking() {
                     <div className={`w-10 h-10 ${iconColor} rounded-lg flex items-center justify-center`}>
                       <IconComponent className="h-5 w-5" />
                     </div>
-                    <div>
-                      <p className="font-medium text-foreground" data-testid={`text-category-${budget.category.toLowerCase().replace(/\s+/g, '-')}`}>
-                        {budget.category}
-                      </p>
-                      <p className="text-sm text-gray-500" data-testid={`text-spending-${budget.category.toLowerCase().replace(/\s+/g, '-')}`}>
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-2">
+                        <p className="font-medium text-foreground" data-testid={`text-category-${budget.category.toLowerCase().replace(/\s+/g, '-')}`}>
+                          {budget.category}
+                        </p>
+                        {(() => {
+                          const insight = getInsightForCategory(budget.category);
+                          if (insight) {
+                            const InsightIcon = insightIcons[insight.type as keyof typeof insightIcons] || BarChart3;
+                            const iconColor = insightColors[insight.type as keyof typeof insightColors] || "text-primary";
+                            return (
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <button className={`insight-badge p-1 hover:bg-accent rounded-full transition-colors ${iconColor}`} data-testid={`insight-icon-${budget.category.toLowerCase().replace(/\s+/g, '-')}`}>
+                                    <InsightIcon className="h-4 w-4" />
+                                  </button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-80" side="top">
+                                  <div className="space-y-2">
+                                    <p className="font-semibold text-sm">{insight.title}</p>
+                                    <p className="text-sm text-muted-foreground">{insight.message}</p>
+                                  </div>
+                                </PopoverContent>
+                              </Popover>
+                            );
+                          }
+                          return null;
+                        })()}
+                      </div>
+                      <p className="text-sm text-muted-foreground" data-testid={`text-spending-${budget.category.toLowerCase().replace(/\s+/g, '-')}`}>
                         {formatCurrency(budget.currentSpent)} of {formatCurrency(budget.monthlyLimit)} spent
                       </p>
                     </div>

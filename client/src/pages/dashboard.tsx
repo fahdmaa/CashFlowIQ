@@ -3,7 +3,6 @@ import FinancialOverview from "@/components/financial-overview";
 import BudgetTracking from "@/components/budget-tracking";
 import SpendingAnalytics from "@/components/spending-analytics";
 import RecentTransactions from "@/components/recent-transactions";
-import SmartInsights from "@/components/smart-insights";
 import AddTransactionModal from "@/components/add-transaction-modal";
 import { useState } from "react";
 
@@ -25,7 +24,6 @@ export default function Dashboard() {
           
           <div className="space-y-8">
             <RecentTransactions />
-            <SmartInsights />
           </div>
         </div>
       </main>
