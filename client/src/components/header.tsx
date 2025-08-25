@@ -1,6 +1,7 @@
 import { Plus, User, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
+import { Link, useLocation } from "wouter";
 
 interface HeaderProps {
   onAddTransaction: () => void;
@@ -8,6 +9,7 @@ interface HeaderProps {
 
 export default function Header({ onAddTransaction }: HeaderProps) {
   const [isDark, setIsDark] = useState(false);
+  const [location] = useLocation();
 
   useEffect(() => {
     const stored = localStorage.getItem("theme");
@@ -38,16 +40,44 @@ export default function Header({ onAddTransaction }: HeaderProps) {
               <h1 className="text-2xl font-bold text-foreground">BudgetWise</h1>
             </div>
             <nav className="hidden md:flex space-x-8">
-              <a href="#" className="text-primary font-medium border-b-2 border-primary pb-1 transition-all hover:text-primary/80" data-testid="nav-dashboard">
+              <Link 
+                href="/" 
+                className={`font-medium pb-1 transition-all ${
+                  location === "/" 
+                    ? "text-primary border-b-2 border-primary" 
+                    : "text-muted-foreground hover:text-foreground hover:border-b-2 hover:border-muted-foreground"
+                }`} 
+                data-testid="nav-dashboard"
+              >
                 Dashboard
-              </a>
-              <a href="#" className="text-muted-foreground hover:text-foreground transition-all hover:border-b-2 hover:border-muted-foreground pb-1" data-testid="nav-transactions">
+              </Link>
+              <Link 
+                href="/transactions" 
+                className={`font-medium pb-1 transition-all ${
+                  location === "/transactions" 
+                    ? "text-primary border-b-2 border-primary" 
+                    : "text-muted-foreground hover:text-foreground hover:border-b-2 hover:border-muted-foreground"
+                }`} 
+                data-testid="nav-transactions"
+              >
                 Transactions
-              </a>
-              <a href="#" className="text-muted-foreground hover:text-foreground transition-all hover:border-b-2 hover:border-muted-foreground pb-1" data-testid="nav-budgets">
+              </Link>
+              <Link 
+                href="/budgets" 
+                className={`font-medium pb-1 transition-all ${
+                  location === "/budgets" 
+                    ? "text-primary border-b-2 border-primary" 
+                    : "text-muted-foreground hover:text-foreground hover:border-b-2 hover:border-muted-foreground"
+                }`} 
+                data-testid="nav-budgets"
+              >
                 Budgets
-              </a>
-              <a href="#" className="text-muted-foreground hover:text-foreground transition-all hover:border-b-2 hover:border-muted-foreground pb-1" data-testid="nav-reports">
+              </Link>
+              <a 
+                href="#" 
+                className="text-muted-foreground hover:text-foreground transition-all hover:border-b-2 hover:border-muted-foreground pb-1 font-medium" 
+                data-testid="nav-reports"
+              >
                 Reports
               </a>
             </nav>
