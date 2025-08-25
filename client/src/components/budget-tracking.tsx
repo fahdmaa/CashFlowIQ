@@ -5,6 +5,8 @@ import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Utensils, Car, Gamepad2, ShoppingBag, Zap, AlertTriangle, TrendingUp, BarChart3 } from "lucide-react";
+import { useState } from "react";
+import ManageBudgetsDialog from "@/components/manage-budgets-dialog";
 
 const categoryIcons = {
   "Food & Dining": Utensils,
@@ -26,6 +28,7 @@ export default function BudgetTracking() {
   const { data: budgets, isLoading } = useQuery<any[]>({
     queryKey: ["/api/budgets"],
   });
+  const [open, setOpen] = useState(false);
 
   const { data: insights } = useQuery<any[]>({
     queryKey: ["/api/insights"],
@@ -85,8 +88,10 @@ export default function BudgetTracking() {
   const formatCurrency = (amount: string) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
-      currency: "USD",
-    }).format(parseFloat(amount));
+      currency: "MAD",
+    })
+      .format(parseFloat(amount))
+      .replace("MAD", "DH");
   };
 
   const calculateProgress = (spent: string, limit: string) => {
@@ -111,15 +116,17 @@ export default function BudgetTracking() {
   };
 
   return (
-    <Card className="bg-white rounded-xl shadow-sm border border-gray-200">
-      <CardHeader className="pb-6">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-xl font-semibold text-foreground">Budget Overview</CardTitle>
-          <Button variant="ghost" className="text-primary hover:text-primary/80 font-medium text-sm" data-testid="button-manage-budgets">
+    <>
+      <ManageBudgetsDialog open={open} onOpenChange={setOpen} />
+      <Card className="bg-white rounded-xl shadow-sm border border-gray-200">
+        <CardHeader className="pb-6">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-xl font-semibold text-foreground">Budget Overview</CardTitle>
+          <Button variant="ghost" className="text-primary hover:text-primary/80 font-medium text-sm" data-testid="button-manage-budgets" onClick={() => setOpen(true)}>
             Manage Budgets
           </Button>
-        </div>
-      </CardHeader>
+          </div>
+        </CardHeader>
       
       <CardContent>
         <div className="space-y-6">
@@ -190,6 +197,7 @@ export default function BudgetTracking() {
           })}
         </div>
       </CardContent>
-    </Card>
+      </Card>
+    </>
   );
 }
