@@ -66,6 +66,7 @@ export default function AddTransactionModal({ isOpen, onClose }: AddTransactionM
   useEffect(() => {
     if (watchedType === "income") {
       setValue("category", "Income");
+      setSuggestedCategory("");
     }
   }, [watchedType, setValue]);
 
@@ -108,6 +109,17 @@ export default function AddTransactionModal({ isOpen, onClose }: AddTransactionM
     reset();
     setSuggestedCategory("");
     onClose();
+  };
+
+  // Get filtered categories based on transaction type
+  const getFilteredCategories = () => {
+    if (!categories) return [];
+    
+    if (watchedType === "income") {
+      return categories.filter(c => c.type === "income" || c.name === "Income");
+    } else {
+      return categories.filter(c => c.type === "expense");
+    }
   };
 
   return (
@@ -164,27 +176,41 @@ export default function AddTransactionModal({ isOpen, onClose }: AddTransactionM
             )}
           </div>
 
-          {watchedType === "expense" && (
-            <div>
-              <Label htmlFor="category" className="text-sm font-medium text-foreground mb-2 block">Category</Label>
-              <Select onValueChange={(value) => setValue("category", value)} value={getValues("category")}>
-                <SelectTrigger data-testid="select-category">
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories?.filter(c => c.type === "expense").map(c => (
-                    <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {suggestedCategory && (
-                <p className="text-sm text-primary mt-1">Suggested: {suggestedCategory}</p>
-              )}
-              {errors.category && (
-                <p className="text-sm text-destructive mt-1">{errors.category.message}</p>
-              )}
-            </div>
-          )}
+          <div>
+            <Label htmlFor="category" className="text-sm font-medium text-foreground mb-2 block">Category</Label>
+            <Select onValueChange={(value) => setValue("category", value)} value={getValues("category")}>
+              <SelectTrigger data-testid="select-category">
+                <SelectValue placeholder="Select category" />
+              </SelectTrigger>
+              <SelectContent>
+                {getFilteredCategories().map(c => (
+                  <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>
+                ))}
+                {/* Fallback options if categories API fails */}
+                {(!categories || categories.length === 0) && (
+                  <>
+                    {watchedType === "expense" ? (
+                      <>
+                        <SelectItem value="Food & Dining">Food & Dining</SelectItem>
+                        <SelectItem value="Transportation">Transportation</SelectItem>
+                        <SelectItem value="Entertainment">Entertainment</SelectItem>
+                        <SelectItem value="Shopping">Shopping</SelectItem>
+                        <SelectItem value="Bills & Utilities">Bills & Utilities</SelectItem>
+                      </>
+                    ) : (
+                      <SelectItem value="Income">Income</SelectItem>
+                    )}
+                  </>
+                )}
+              </SelectContent>
+            </Select>
+            {suggestedCategory && watchedType === "expense" && (
+              <p className="text-sm text-primary mt-1">Suggested: {suggestedCategory}</p>
+            )}
+            {errors.category && (
+              <p className="text-sm text-destructive mt-1">{errors.category.message}</p>
+            )}
+          </div>
 
           <div>
             <Label htmlFor="date" className="text-sm font-medium text-foreground mb-2 block">Date</Label>
@@ -194,7 +220,7 @@ export default function AddTransactionModal({ isOpen, onClose }: AddTransactionM
               data-testid="input-date"
             />
             {errors.date && (
-              <p className="text-sm text-destructive mt-1">{errors.date.message}</p>
+              <p className="text-sm text-descriptive mt-1">{errors.date.message}</p>
             )}
           </div>
 

@@ -130,24 +130,6 @@ export class MemStorage implements IStorage {
     return budget;
   }
 
-  // Categories
-  async getCategories(): Promise<Category[]> {
-    return Array.from(this.categories.values());
-  }
-
-  async createCategory(insertCategory: InsertCategory): Promise<Category> {
-    const id = randomUUID();
-    const category: Category = { ...insertCategory, id, createdAt: new Date() };
-    this.categories.set(id, category);
-    if (category.type === "expense") {
-      const existing = await this.getBudgetByCategory(category.name);
-      if (!existing) {
-        await this.createBudget({ category: category.name, monthlyLimit: "0.00" });
-      }
-    }
-    return category;
-  }
-
   async updateBudgetSpent(category: string, amount: number): Promise<Budget | undefined> {
     const budget = await this.getBudgetByCategory(category);
     if (budget) {
@@ -169,6 +151,24 @@ export class MemStorage implements IStorage {
     return undefined;
   }
 
+  // Categories
+  async getCategories(): Promise<Category[]> {
+    return Array.from(this.categories.values());
+  }
+
+  async createCategory(insertCategory: InsertCategory): Promise<Category> {
+    const id = randomUUID();
+    const category: Category = { ...insertCategory, id, createdAt: new Date() };
+    this.categories.set(id, category);
+    if (category.type === "expense") {
+      const existing = await this.getBudgetByCategory(category.name);
+      if (!existing) {
+        await this.createBudget({ category: category.name, monthlyLimit: "0.00" });
+      }
+    }
+    return category;
+  }
+
   // Insights
   async getInsights(): Promise<Insight[]> {
     return Array.from(this.insights.values()).sort(
@@ -176,7 +176,7 @@ export class MemStorage implements IStorage {
     );
   }
 
-  async createInsight(insertInsight: InsertInsight): Promise<Insight> {
+  async createInsight(insertInsight: InsightInsert): Promise<Insight> {
     const id = randomUUID();
     const insight: Insight = {
       ...insertInsight,
