@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { insertTransactionSchema, insertBudgetSchema, updateBudgetSchema, insertCategorySchema } from "@shared/schema";
 import { insertTransactionSchema, insertBudgetSchema, updateBudgetSchema } from "@shared/schema";
 import { z } from "zod";
 
@@ -81,6 +82,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.status(400).json({ message: "Invalid budget data", errors: error.errors });
       } else {
         res.status(500).json({ message: "Failed to update budget" });
+      }
+    }
+  });
+
+  // Categories
+  app.get("/api/categories", async (req, res) => {
+    try {
+      const categories = await storage.getCategories();
+      res.json(categories);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch categories" });
+    }
+  });
+
+  app.post("/api/categories", async (req, res) => {
+    try {
+      const validated = insertCategorySchema.parse(req.body);
+      const category = await storage.createCategory(validated);
+      res.json(category);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ message: "Invalid category data", errors: error.errors });
+      } else {
+        res.status(500).json({ message: "Failed to create category" });
       }
     }
   });

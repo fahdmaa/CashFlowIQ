@@ -1,4 +1,4 @@
-import { type Transaction, type InsertTransaction, type Budget, type InsertBudget, type Insight, type InsertInsight } from "@shared/schema";
+import { type Transaction, type InsertTransaction, type Budget, type InsertBudget, type Insight, type InsertInsight, type Category, type InsertCategory } from "@shared/schema";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -7,13 +7,16 @@ export interface IStorage {
   getTransactionsByDateRange(startDate: Date, endDate: Date): Promise<Transaction[]>;
   createTransaction(transaction: InsertTransaction): Promise<Transaction>;
   getTransactionsByCategory(category: string): Promise<Transaction[]>;
-  
+
   // Budgets
   getBudgets(): Promise<Budget[]>;
   getBudgetByCategory(category: string): Promise<Budget | undefined>;
   createBudget(budget: InsertBudget): Promise<Budget>;
   updateBudgetSpent(category: string, amount: number): Promise<Budget | undefined>;
   updateBudgetLimit(category: string, monthlyLimit: string): Promise<Budget | undefined>;
+  // Categories
+  getCategories(): Promise<Category[]>;
+  createCategory(category: InsertCategory): Promise<Category>;
   
   // Insights
   getInsights(): Promise<Insight[]>;
@@ -24,28 +27,43 @@ export interface IStorage {
 export class MemStorage implements IStorage {
   private transactions: Map<string, Transaction>;
   private budgets: Map<string, Budget>;
+  private categories: Map<string, Category>;
   private insights: Map<string, Insight>;
 
   constructor() {
     this.transactions = new Map();
     this.budgets = new Map();
+    this.categories = new Map();
     this.insights = new Map();
-    
-    // Initialize with default budgets
-    this.initializeDefaultBudgets();
+
+    // Initialize with default data
+    this.initializeDefaultCategories();
   }
 
-  private async initializeDefaultBudgets() {
-    const defaultBudgets = [
-      { category: "Food & Dining", monthlyLimit: "600.00" },
-      { category: "Transportation", monthlyLimit: "400.00" },
-      { category: "Entertainment", monthlyLimit: "300.00" },
-      { category: "Shopping", monthlyLimit: "500.00" },
-      { category: "Bills & Utilities", monthlyLimit: "800.00" },
+  private async initializeDefaultCategories() {
+    const defaultCategories: InsertCategory[] = [
+      { name: "Food & Dining", type: "expense", color: "#F97316", icon: "Utensils" },
+      { name: "Transportation", type: "expense", color: "#3B82F6", icon: "Car" },
+      { name: "Entertainment", type: "expense", color: "#A855F7", icon: "Gamepad2" },
+      { name: "Shopping", type: "expense", color: "#F43F5E", icon: "ShoppingBag" },
+      { name: "Bills & Utilities", type: "expense", color: "#10B981", icon: "Home" },
+      { name: "Income", type: "income", color: "#0EA5E9", icon: "Wallet" },
     ];
 
-    for (const budget of defaultBudgets) {
-      await this.createBudget(budget);
+    const defaultLimits: Record<string, string> = {
+      "Food & Dining": "600.00",
+      Transportation: "400.00",
+      Entertainment: "300.00",
+      Shopping: "500.00",
+      "Bills & Utilities": "800.00",
+    };
+
+    for (const category of defaultCategories) {
+      await this.createCategory(category);
+      if (category.type === "expense") {
+        const limit = defaultLimits[category.name] || "0.00";
+        await this.updateBudgetLimit(category.name, limit);
+      }
     }
   }
 
@@ -109,6 +127,24 @@ export class MemStorage implements IStorage {
     };
     this.budgets.set(id, budget);
     return budget;
+  }
+
+  // Categories
+  async getCategories(): Promise<Category[]> {
+    return Array.from(this.categories.values());
+  }
+
+  async createCategory(insertCategory: InsertCategory): Promise<Category> {
+    const id = randomUUID();
+    const category: Category = { ...insertCategory, id, createdAt: new Date() };
+    this.categories.set(id, category);
+    if (category.type === "expense") {
+      const existing = await this.getBudgetByCategory(category.name);
+      if (!existing) {
+        await this.createBudget({ category: category.name, monthlyLimit: "0.00" });
+      }
+    }
+    return category;
   }
 
   async updateBudgetSpent(category: string, amount: number): Promise<Budget | undefined> {

@@ -1,6 +1,10 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ChevronUp, ChevronDown, Plus } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
+import AddCategoryModal from "./add-category-modal";
 import { ChevronUp, ChevronDown } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
@@ -14,6 +18,7 @@ export default function ManageBudgetsDialog({ open, onOpenChange }: ManageBudget
   const { data: budgets } = useQuery<any[]>({ queryKey: ["/api/budgets"] });
   const [values, setValues] = useState<Record<string, string>>({});
   const queryClient = useQueryClient();
+  const [addCategoryOpen, setAddCategoryOpen] = useState(false);
 
   useEffect(() => {
     if (budgets) {
@@ -65,6 +70,12 @@ export default function ManageBudgetsDialog({ open, onOpenChange }: ManageBudget
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
+          <div className="flex items-center justify-between">
+            <DialogTitle>Manage Budgets</DialogTitle>
+            <Button size="icon" variant="outline" onClick={() => setAddCategoryOpen(true)} data-testid="button-add-category">
+              <Plus className="h-4 w-4" />
+            </Button>
+          </div>
           <DialogTitle>Manage Budgets</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
@@ -103,6 +114,7 @@ export default function ManageBudgetsDialog({ open, onOpenChange }: ManageBudget
           <Button onClick={handleSave} data-testid="button-save-budgets">Save</Button>
         </DialogFooter>
       </DialogContent>
+      <AddCategoryModal open={addCategoryOpen} onOpenChange={setAddCategoryOpen} />
     </Dialog>
   );
 }

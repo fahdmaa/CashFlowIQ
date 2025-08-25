@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
+import * as Icons from "lucide-react";
 import { Coffee, Building, Car, ShoppingCart, Film, Utensils, Gamepad2, ShoppingBag, Zap } from "lucide-react";
 
 const categoryIcons = {
@@ -26,6 +27,7 @@ export default function RecentTransactions() {
   const { data: transactions, isLoading } = useQuery<any[]>({
     queryKey: ["/api/transactions"],
   });
+  const { data: categories } = useQuery<any[]>({ queryKey: ["/api/categories"] });
 
   if (isLoading) {
     return (
@@ -106,8 +108,8 @@ export default function RecentTransactions() {
             </div>
           ) : (
             recentTransactions.map((transaction: any) => {
-              const IconComponent = categoryIcons[transaction.category as keyof typeof categoryIcons] || Coffee;
-              const iconColor = categoryColors[transaction.category as keyof typeof categoryColors] || "bg-blue-100 text-blue-600";
+              const category = categories?.find((c: any) => c.name === transaction.category);
+              const IconComponent = (Icons as any)[category?.icon] || (Icons as any)["Circle"];
               
               return (
                 <div 
@@ -116,7 +118,10 @@ export default function RecentTransactions() {
                   data-testid={`transaction-${transaction.id}`}
                 >
                   <div className="flex items-center space-x-3">
-                    <div className={`w-10 h-10 ${iconColor} rounded-lg flex items-center justify-center`}>
+                    <div
+                      className="w-10 h-10 rounded-lg flex items-center justify-center"
+                      style={{ backgroundColor: `${category?.color || "#3b82f6"}20`, color: category?.color || "#3b82f6" }}
+                    >
                       <IconComponent className="h-5 w-5" />
                     </div>
                     <div>

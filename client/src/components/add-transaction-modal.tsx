@@ -8,7 +8,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertTransactionSchema } from "@shared/schema";
 import { z } from "zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { categorizeTransaction } from "@/lib/categorization";
@@ -33,6 +33,7 @@ export default function AddTransactionModal({ isOpen, onClose }: AddTransactionM
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [suggestedCategory, setSuggestedCategory] = useState<string>("");
+  const { data: categories } = useQuery<any[]>({ queryKey: ["/api/categories"] });
 
   const {
     register,
@@ -51,15 +52,22 @@ export default function AddTransactionModal({ isOpen, onClose }: AddTransactionM
   });
 
   const watchedDescription = watch("description");
+  const watchedType = watch("type");
 
   // Auto-categorization when description changes
   useEffect(() => {
-    if (watchedDescription && watchedDescription.length > 2) {
+    if (watchedType === "expense" && watchedDescription && watchedDescription.length > 2) {
       const suggested = categorizeTransaction(watchedDescription);
       setSuggestedCategory(suggested);
       setValue("category", suggested);
     }
-  }, [watchedDescription, setValue]);
+  }, [watchedDescription, watchedType, setValue]);
+
+  useEffect(() => {
+    if (watchedType === "income") {
+      setValue("category", "Income");
+    }
+  }, [watchedType, setValue]);
 
   const createTransactionMutation = useMutation({
     mutationFn: async (data: TransactionForm) => {
@@ -125,7 +133,23 @@ export default function AddTransactionModal({ isOpen, onClose }: AddTransactionM
               </div>
             </RadioGroup>
           </div>
-
+          <div>
+            <Label htmlFor="amount" className="text-sm font-medium text-foreground mb-2 block">Amount</Label>
+            <div className="relative">
+              <span className="absolute left-3 top-3 text-muted-foreground">DH</span>
+              <Input
+                {...register("amount")}
+                type="number"
+                step="0.01"
+                placeholder="0.00"
+                className="pl-8"
+                data-testid="input-amount"
+              />
+            </div>
+            {errors.amount && (
+              <p className="text-sm text-destructive mt-1">{errors.amount.message}</p>
+            )}
+          </div>
 <div>
   <Label htmlFor="amount" className="text-sm font-medium text-foreground mb-2 block">Amount</Label>
   <div className="relative">
@@ -144,7 +168,6 @@ export default function AddTransactionModal({ isOpen, onClose }: AddTransactionM
     <p className="text-sm text-destructive mt-1">{errors.amount.message}</p>
   )}
 </div>
-
           <div>
             <Label htmlFor="description" className="text-sm font-medium text-foreground mb-2 block">Description</Label>
             <Input
@@ -156,7 +179,27 @@ export default function AddTransactionModal({ isOpen, onClose }: AddTransactionM
               <p className="text-sm text-destructive mt-1">{errors.description.message}</p>
             )}
           </div>
-
+          {watchedType === "expense" && (
+            <div>
+              <Label htmlFor="category" className="text-sm font-medium text-foreground mb-2 block">Category</Label>
+              <Select onValueChange={(value) => setValue("category", value)} value={getValues("category")}>
+                <SelectTrigger data-testid="select-category">
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories?.filter(c => c.type === "expense").map(c => (
+                    <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {suggestedCategory && (
+                <p className="text-sm text-primary mt-1">Suggested: {suggestedCategory}</p>
+              )}
+              {errors.category && (
+                <p className="text-sm text-destructive mt-1">{errors.category.message}</p>
+              )}
+            </div>
+          )}
           <div>
             <Label htmlFor="category" className="text-sm font-medium text-foreground mb-2 block">Category</Label>
             <Select onValueChange={(value) => setValue("category", value)} value={getValues("category")}>
@@ -179,7 +222,6 @@ export default function AddTransactionModal({ isOpen, onClose }: AddTransactionM
               <p className="text-sm text-destructive mt-1">{errors.category.message}</p>
             )}
           </div>
-
           <div>
             <Label htmlFor="date" className="text-sm font-medium text-foreground mb-2 block">Date</Label>
             <Input

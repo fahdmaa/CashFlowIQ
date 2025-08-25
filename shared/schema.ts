@@ -21,6 +21,15 @@ export const budgets = pgTable("budgets", {
   createdAt: timestamp("created_at").default(sql`now()`).notNull(),
 });
 
+export const categories = pgTable("categories", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull().unique(),
+  type: text("type").notNull(), // 'income' or 'expense'
+  color: text("color").notNull(),
+  icon: text("icon").notNull(),
+  createdAt: timestamp("created_at").default(sql`now()`).notNull(),
+});
+
 export const insights = pgTable("insights", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   type: text("type").notNull(), // 'warning', 'success', 'info'
@@ -44,6 +53,11 @@ export const insertBudgetSchema = createInsertSchema(budgets).omit({
   createdAt: true,
 });
 
+export const insertCategorySchema = createInsertSchema(categories).omit({
+  id: true,
+  createdAt: true,
+});
+
 export const updateBudgetSchema = z.object({
   monthlyLimit: z.string(),
 });
@@ -57,6 +71,8 @@ export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
 export type Transaction = typeof transactions.$inferSelect;
 export type InsertBudget = z.infer<typeof insertBudgetSchema>;
 export type Budget = typeof budgets.$inferSelect;
+export type InsertCategory = z.infer<typeof insertCategorySchema>;
+export type Category = typeof categories.$inferSelect;
 export type UpdateBudget = z.infer<typeof updateBudgetSchema>;
 export type InsertInsight = z.infer<typeof insertInsightSchema>;
 export type Insight = typeof insights.$inferSelect;

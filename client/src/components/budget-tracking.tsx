@@ -1,9 +1,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { AlertTriangle, TrendingUp, BarChart3 } from "lucide-react";
+import * as Icons from "lucide-react";
+import { useState } from "react";
+import ManageBudgetsDialog from "@/components/manage-budgets-dialog";
 import { Utensils, Car, Gamepad2, ShoppingBag, Zap, AlertTriangle, TrendingUp, BarChart3 } from "lucide-react";
 import { useState } from "react";
 import ManageBudgetsDialog from "@/components/manage-budgets-dialog";
@@ -28,6 +31,7 @@ export default function BudgetTracking() {
   const { data: budgets, isLoading } = useQuery<any[]>({
     queryKey: ["/api/budgets"],
   });
+  const { data: categories } = useQuery<any[]>({ queryKey: ["/api/categories"] });
   const [open, setOpen] = useState(false);
 
   const { data: insights } = useQuery<any[]>({
@@ -122,6 +126,34 @@ export default function BudgetTracking() {
         <CardHeader className="pb-6">
           <div className="flex items-center justify-between">
             <CardTitle className="text-xl font-semibold text-foreground">Budget Overview</CardTitle>
+          <Button variant="ghost" className="text-primary hover:text-primary/80 font-medium text-sm" data-testid="button-manage-budgets" onClick={() => setOpen(true)}>
+            Manage Budgets
+          </Button>
+          </div>
+        </CardHeader>
+      
+      <CardContent>
+        <div className="space-y-6">
+          {budgets?.map((budget: any) => {
+            const category = categories?.find((c: any) => c.name === budget.category);
+            const IconComponent = (Icons as any)[category?.icon] || (Icons as any)["Circle"];
+            const progress = calculateProgress(budget.currentSpent, budget.monthlyLimit);
+            const remaining = parseFloat(budget.monthlyLimit) - parseFloat(budget.currentSpent);
+            
+            return (
+              <div key={budget.id} className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div
+                      className="w-10 h-10 rounded-lg flex items-center justify-center"
+                      style={{ backgroundColor: `${category?.color || "#3b82f6"}20`, color: category?.color || "#3b82f6" }}
+                    >
+                      <IconComponent className="h-5 w-5" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-2">
+                        <p className="font-medium text-foreground" data-testid={`text-category-${budget.category.toLowerCase().replace(/\s+/g, '-')}`}>
+                          {budget.category}
             <Button variant="ghost" className="text-primary hover:text-primary/80 font-medium text-sm" data-testid="button-manage-budgets" onClick={() => setOpen(true)}>
               Manage Budgets
             </Button>
@@ -186,6 +218,26 @@ export default function BudgetTracking() {
                       </p>
                     </div>
                   </div>
+                  <div className="text-right">
+                    <p className={`font-semibold ${getRemainingColor(budget.currentSpent, budget.monthlyLimit)}`} data-testid={`text-remaining-${budget.category.toLowerCase().replace(/\s+/g, '-')}`}>
+                      {remaining < 0 ? `-${formatCurrency(Math.abs(remaining).toString())}` : formatCurrency(remaining.toString())}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {remaining < 0 ? "over budget" : "remaining"}
+                    </p>
+                  </div>
+                </div>
+                <div className="w-full bg-muted rounded-full h-2">
+                  <div
+                    className={`h-2 rounded-full transition-all duration-300 ${getProgressColor(budget.currentSpent, budget.monthlyLimit)}`}
+                    style={{ width: `${Math.min(progress, 100)}%` }}
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </CardContent>
                   <div className="w-full bg-muted rounded-full h-2">
                     <div
                       className={`h-2 rounded-full transition-all duration-300 ${getProgressColor(budget.currentSpent, budget.monthlyLimit)}`}
