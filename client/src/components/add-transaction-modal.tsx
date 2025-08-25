@@ -126,23 +126,24 @@ export default function AddTransactionModal({ isOpen, onClose }: AddTransactionM
             </RadioGroup>
           </div>
 
-          <div>
-            <Label htmlFor="amount" className="text-sm font-medium text-foreground mb-2 block">Amount</Label>
-            <div className="relative">
-              <span className="absolute left-3 top-3 text-muted-foreground">DH</span>
-              <Input
-                {...register("amount")}
-                type="number"
-                step="0.01"
-                placeholder="0.00"
-                className="pl-8"
-                data-testid="input-amount"
-              />
-            </div>
-            {errors.amount && (
-              <p className="text-sm text-destructive mt-1">{errors.amount.message}</p>
-            )}
-          </div>
+<div>
+  <Label htmlFor="amount" className="text-sm font-medium text-foreground mb-2 block">Amount</Label>
+  <div className="relative">
+    {/* This is the corrected line */}
+    <span className="absolute left-3 top-3 text-muted-foreground">DH</span>
+    <Input
+      {...register("amount")}
+      type="number"
+      step="0.01"
+      placeholder="0.00"
+      className="pl-8"
+      data-testid="input-amount"
+    />
+  </div>
+  {errors.amount && (
+    <p className="text-sm text-destructive mt-1">{errors.amount.message}</p>
+  )}
+</div>
 
           <div>
             <Label htmlFor="description" className="text-sm font-medium text-foreground mb-2 block">Description</Label>
