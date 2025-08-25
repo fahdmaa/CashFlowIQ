@@ -14,7 +14,6 @@ export interface IStorage {
   createBudget(budget: InsertBudget): Promise<Budget>;
   updateBudgetSpent(category: string, amount: number): Promise<Budget | undefined>;
   updateBudgetLimit(category: string, monthlyLimit: string): Promise<Budget | undefined>;
-
   // Categories
   getCategories(): Promise<Category[]>;
   createCategory(category: InsertCategory): Promise<Category>;

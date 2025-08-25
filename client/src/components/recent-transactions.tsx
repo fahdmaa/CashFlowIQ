@@ -3,6 +3,25 @@ import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import * as Icons from "lucide-react";
+import { Coffee, Building, Car, ShoppingCart, Film, Utensils, Gamepad2, ShoppingBag, Zap } from "lucide-react";
+
+const categoryIcons = {
+  "Food & Dining": Utensils,
+  "Transportation": Car,
+  "Entertainment": Gamepad2,
+  "Shopping": ShoppingBag,
+  "Bills & Utilities": Zap,
+  "Income": Building,
+};
+
+const categoryColors = {
+  "Food & Dining": "bg-blue-100 text-blue-600 dark:bg-blue-950 dark:text-blue-300",
+  "Transportation": "bg-purple-100 text-purple-600 dark:bg-purple-950 dark:text-purple-300",
+  "Entertainment": "bg-green-100 text-green-600 dark:bg-emerald-950 dark:text-emerald-300",
+  "Shopping": "bg-red-100 text-red-600 dark:bg-rose-950 dark:text-rose-300",
+  "Bills & Utilities": "bg-yellow-100 text-yellow-600 dark:bg-amber-950 dark:text-amber-300",
+  "Income": "bg-green-100 text-green-600 dark:bg-emerald-950 dark:text-emerald-300",
+};
 
 export default function RecentTransactions() {
   const { data: transactions, isLoading } = useQuery<any[]>({

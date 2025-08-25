@@ -7,6 +7,25 @@ import { AlertTriangle, TrendingUp, BarChart3 } from "lucide-react";
 import * as Icons from "lucide-react";
 import { useState } from "react";
 import ManageBudgetsDialog from "@/components/manage-budgets-dialog";
+import { Utensils, Car, Gamepad2, ShoppingBag, Zap, AlertTriangle, TrendingUp, BarChart3 } from "lucide-react";
+import { useState } from "react";
+import ManageBudgetsDialog from "@/components/manage-budgets-dialog";
+
+const categoryIcons = {
+  "Food & Dining": Utensils,
+  "Transportation": Car,
+  "Entertainment": Gamepad2,
+  "Shopping": ShoppingBag,
+  "Bills & Utilities": Zap,
+};
+
+const categoryColors = {
+  "Food & Dining": "bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300",
+  "Transportation": "bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300",
+  "Entertainment": "bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300",
+  "Shopping": "bg-rose-50 text-rose-700 dark:bg-rose-950 dark:text-rose-300",
+  "Bills & Utilities": "bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300",
+};
 
 export default function BudgetTracking() {
   const { data: budgets, isLoading } = useQuery<any[]>({
@@ -86,7 +105,7 @@ export default function BudgetTracking() {
   const getRemainingColor = (spent: string, limit: string) => {
     const remaining = parseFloat(limit) - parseFloat(spent);
     const progress = calculateProgress(spent, limit);
-    
+
     if (progress > 100) return "text-destructive";
     if (progress > 80) return "text-warning";
     return "text-foreground";
@@ -94,7 +113,7 @@ export default function BudgetTracking() {
 
   const getProgressColor = (spent: string, limit: string) => {
     const progress = calculateProgress(spent, limit);
-    
+
     if (progress > 100) return "bg-destructive";
     if (progress > 80) return "bg-warning";
     return "bg-secondary";
@@ -135,33 +154,67 @@ export default function BudgetTracking() {
                       <div className="flex items-center space-x-2">
                         <p className="font-medium text-foreground" data-testid={`text-category-${budget.category.toLowerCase().replace(/\s+/g, '-')}`}>
                           {budget.category}
-                        </p>
-                        {(() => {
-                          const insight = getInsightForCategory(budget.category);
-                          if (insight) {
-                            const InsightIcon = insightIcons[insight.type as keyof typeof insightIcons] || BarChart3;
-                            const iconColor = insightColors[insight.type as keyof typeof insightColors] || "text-primary";
-                            return (
-                              <Popover>
-                                <PopoverTrigger asChild>
-                                  <button className={`insight-badge p-1 hover:bg-accent rounded-full transition-colors ${iconColor}`} data-testid={`insight-icon-${budget.category.toLowerCase().replace(/\s+/g, '-')}`}>
-                                    <InsightIcon className="h-4 w-4" />
-                                  </button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-80" side="top">
-                                  <div className="space-y-2">
-                                    <p className="font-semibold text-sm">{insight.title}</p>
-                                    <p className="text-sm text-muted-foreground">{insight.message}</p>
-                                  </div>
-                                </PopoverContent>
-                              </Popover>
-                            );
-                          }
-                          return null;
-                        })()}
+            <Button variant="ghost" className="text-primary hover:text-primary/80 font-medium text-sm" data-testid="button-manage-budgets" onClick={() => setOpen(true)}>
+              Manage Budgets
+            </Button>
+          </div>
+        </CardHeader>
+
+        <CardContent>
+          <div className="space-y-6">
+            {budgets?.map((budget: any) => {
+              const IconComponent = categoryIcons[budget.category as keyof typeof categoryIcons] || Utensils;
+              const iconColor = categoryColors[budget.category as keyof typeof categoryColors] || "bg-blue-100 text-blue-600";
+              const progress = calculateProgress(budget.currentSpent, budget.monthlyLimit);
+              const remaining = parseFloat(budget.monthlyLimit) - parseFloat(budget.currentSpent);
+
+              return (
+                <div key={budget.id} className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className={`w-10 h-10 ${iconColor} rounded-lg flex items-center justify-center`}>
+                        <IconComponent className="h-5 w-5" />
                       </div>
-                      <p className="text-sm text-muted-foreground" data-testid={`text-spending-${budget.category.toLowerCase().replace(/\s+/g, '-')}`}>
-                        {formatCurrency(budget.currentSpent)} of {formatCurrency(budget.monthlyLimit)} spent
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2">
+                          <p className="font-medium text-foreground" data-testid={`text-category-${budget.category.toLowerCase().replace(/\s+/g, '-')}`}>
+                            {budget.category}
+                          </p>
+                          {(() => {
+                            const insight = getInsightForCategory(budget.category);
+                            if (insight) {
+                              const InsightIcon = insightIcons[insight.type as keyof typeof insightIcons] || BarChart3;
+                              const iconColor = insightColors[insight.type as keyof typeof insightColors] || "text-primary";
+                              return (
+                                <Popover>
+                                  <PopoverTrigger asChild>
+                                    <button className={`insight-badge p-1 hover:bg-accent rounded-full transition-colors ${iconColor}`} data-testid={`insight-icon-${budget.category.toLowerCase().replace(/\s+/g, '-')}`}>
+                                      <InsightIcon className="h-4 w-4" />
+                                    </button>
+                                  </PopoverTrigger>
+                                  <PopoverContent className="w-80" side="top">
+                                    <div className="space-y-2">
+                                      <p className="font-semibold text-sm">{insight.title}</p>
+                                      <p className="text-sm text-muted-foreground">{insight.message}</p>
+                                    </div>
+                                  </PopoverContent>
+                                </Popover>
+                              );
+                            }
+                            return null;
+                          })()}
+                        </div>
+                        <p className="text-sm text-muted-foreground" data-testid={`text-spending-${budget.category.toLowerCase().replace(/\s+/g, '-')}`}>
+                          {formatCurrency(budget.currentSpent)} of {formatCurrency(budget.monthlyLimit)} spent
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className={`font-semibold ${getRemainingColor(budget.currentSpent, budget.monthlyLimit)}`} data-testid={`text-remaining-${budget.category.toLowerCase().replace(/\s+/g, '-')}`}>
+                        {remaining < 0 ? `-${formatCurrency(Math.abs(remaining).toString())}` : formatCurrency(remaining.toString())}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {remaining < 0 ? "over budget" : "remaining"}
                       </p>
                     </div>
                   </div>
@@ -185,6 +238,17 @@ export default function BudgetTracking() {
           })}
         </div>
       </CardContent>
+                  <div className="w-full bg-muted rounded-full h-2">
+                    <div
+                      className={`h-2 rounded-full transition-all duration-300 ${getProgressColor(budget.currentSpent, budget.monthlyLimit)}`}
+                      style={{ width: `${Math.min(progress, 100)}%` }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
       </Card>
     </>
   );
