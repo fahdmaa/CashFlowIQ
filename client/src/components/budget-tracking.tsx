@@ -107,7 +107,12 @@ export default function BudgetTracking() {
         <CardHeader className="pb-6">
           <div className="flex items-center justify-between">
             <CardTitle className="text-xl font-semibold text-foreground">Budget Overview</CardTitle>
-            <Button variant="ghost" className="text-primary hover:text-primary/80 font-medium text-sm" data-testid="button-manage-budgets" onClick={() => setOpen(true)}>
+            <Button 
+              variant="ghost" 
+              className="text-primary hover:text-primary/80 font-medium text-sm" 
+              data-testid="button-manage-budgets" 
+              onClick={() => setOpen(true)}
+            >
               Manage Budgets
             </Button>
           </div>
@@ -143,7 +148,10 @@ export default function BudgetTracking() {
                               return (
                                 <Popover>
                                   <PopoverTrigger asChild>
-                                    <button className={`insight-badge p-1 hover:bg-accent rounded-full transition-colors ${iconColor}`} data-testid={`insight-icon-${budget.category.toLowerCase().replace(/\s+/g, '-')}`}>
+                                    <button 
+                                      className={`insight-badge p-1 hover:bg-accent rounded-full transition-colors ${iconColor}`} 
+                                      data-testid={`insight-icon-${budget.category.toLowerCase().replace(/\s+/g, '-')}`}
+                                    >
                                       <InsightIcon className="h-4 w-4" />
                                     </button>
                                   </PopoverTrigger>

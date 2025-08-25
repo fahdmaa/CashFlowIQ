@@ -66,6 +66,7 @@ export default function AddTransactionModal({ isOpen, onClose }: AddTransactionM
   useEffect(() => {
     if (watchedType === "income") {
       setValue("category", "Income");
+      setSuggestedCategory("");
     }
   }, [watchedType, setValue]);
 
@@ -110,6 +111,17 @@ export default function AddTransactionModal({ isOpen, onClose }: AddTransactionM
     onClose();
   };
 
+  // Get filtered categories based on transaction type
+  const getFilteredCategories = () => {
+    if (!categories) return [];
+    
+    if (watchedType === "income") {
+      return categories.filter(c => c.type === "income" || c.name === "Income");
+    } else {
+      return categories.filter(c => c.type === "expense");
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-md">
@@ -133,6 +145,7 @@ export default function AddTransactionModal({ isOpen, onClose }: AddTransactionM
               </div>
             </RadioGroup>
           </div>
+
           <div>
             <Label htmlFor="amount" className="text-sm font-medium text-foreground mb-2 block">Amount</Label>
             <div className="relative">
@@ -150,24 +163,7 @@ export default function AddTransactionModal({ isOpen, onClose }: AddTransactionM
               <p className="text-sm text-destructive mt-1">{errors.amount.message}</p>
             )}
           </div>
-<div>
-  <Label htmlFor="amount" className="text-sm font-medium text-foreground mb-2 block">Amount</Label>
-  <div className="relative">
-    {/* This is the corrected line */}
-    <span className="absolute left-3 top-3 text-muted-foreground">DH</span>
-    <Input
-      {...register("amount")}
-      type="number"
-      step="0.01"
-      placeholder="0.00"
-      className="pl-8"
-      data-testid="input-amount"
-    />
-  </div>
-  {errors.amount && (
-    <p className="text-sm text-destructive mt-1">{errors.amount.message}</p>
-  )}
-</div>
+
           <div>
             <Label htmlFor="description" className="text-sm font-medium text-foreground mb-2 block">Description</Label>
             <Input
@@ -179,27 +175,7 @@ export default function AddTransactionModal({ isOpen, onClose }: AddTransactionM
               <p className="text-sm text-destructive mt-1">{errors.description.message}</p>
             )}
           </div>
-          {watchedType === "expense" && (
-            <div>
-              <Label htmlFor="category" className="text-sm font-medium text-foreground mb-2 block">Category</Label>
-              <Select onValueChange={(value) => setValue("category", value)} value={getValues("category")}>
-                <SelectTrigger data-testid="select-category">
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories?.filter(c => c.type === "expense").map(c => (
-                    <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {suggestedCategory && (
-                <p className="text-sm text-primary mt-1">Suggested: {suggestedCategory}</p>
-              )}
-              {errors.category && (
-                <p className="text-sm text-destructive mt-1">{errors.category.message}</p>
-              )}
-            </div>
-          )}
+
           <div>
             <Label htmlFor="category" className="text-sm font-medium text-foreground mb-2 block">Category</Label>
             <Select onValueChange={(value) => setValue("category", value)} value={getValues("category")}>
@@ -207,21 +183,35 @@ export default function AddTransactionModal({ isOpen, onClose }: AddTransactionM
                 <SelectValue placeholder="Select category" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Food & Dining">Food & Dining</SelectItem>
-                <SelectItem value="Transportation">Transportation</SelectItem>
-                <SelectItem value="Entertainment">Entertainment</SelectItem>
-                <SelectItem value="Shopping">Shopping</SelectItem>
-                <SelectItem value="Bills & Utilities">Bills & Utilities</SelectItem>
-                <SelectItem value="Income">Income</SelectItem>
+                {getFilteredCategories().map(c => (
+                  <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>
+                ))}
+                {/* Fallback options if categories API fails */}
+                {(!categories || categories.length === 0) && (
+                  <>
+                    {watchedType === "expense" ? (
+                      <>
+                        <SelectItem value="Food & Dining">Food & Dining</SelectItem>
+                        <SelectItem value="Transportation">Transportation</SelectItem>
+                        <SelectItem value="Entertainment">Entertainment</SelectItem>
+                        <SelectItem value="Shopping">Shopping</SelectItem>
+                        <SelectItem value="Bills & Utilities">Bills & Utilities</SelectItem>
+                      </>
+                    ) : (
+                      <SelectItem value="Income">Income</SelectItem>
+                    )}
+                  </>
+                )}
               </SelectContent>
             </Select>
-            {suggestedCategory && (
+            {suggestedCategory && watchedType === "expense" && (
               <p className="text-sm text-primary mt-1">Suggested: {suggestedCategory}</p>
             )}
             {errors.category && (
               <p className="text-sm text-destructive mt-1">{errors.category.message}</p>
             )}
           </div>
+
           <div>
             <Label htmlFor="date" className="text-sm font-medium text-foreground mb-2 block">Date</Label>
             <Input
