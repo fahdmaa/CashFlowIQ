@@ -207,22 +207,22 @@ export default function Budgets() {
         </Card>
 
         {/* Budget Chart and List */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 xl:grid-cols-5 lg:grid-cols-1 gap-8">
           {/* Donut Chart */}
-          <Card className="rounded-xl animate-fadeIn hover-lift transition-all" style={{animationDelay: '500ms'}}>
+          <Card className="rounded-xl animate-fadeIn hover-lift transition-all xl:col-span-2 lg:col-span-1" style={{animationDelay: '500ms'}}>
             <CardHeader className="pb-4">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-lg font-semibold text-foreground">Budget Distribution</CardTitle>
+                <CardTitle className="text-xl font-semibold text-foreground">Budget Distribution</CardTitle>
                 <PieChart className="h-5 w-5 text-muted-foreground" />
               </div>
             </CardHeader>
             <CardContent>
               {!budgets || budgets.length === 0 ? (
-                <div className="h-64 flex items-center justify-center text-muted-foreground">
+                <div className="h-96 flex items-center justify-center text-muted-foreground">
                   No budget data available
                 </div>
               ) : (
-                <div className="h-80">
+                <div className="h-96">
                   <ResponsiveContainer width="100%" height="100%">
                     <RechartsChart>
                       <Pie
@@ -236,9 +236,9 @@ export default function Budgets() {
                           };
                         })}
                         cx="50%"
-                        cy="50%"
-                        innerRadius={60}
-                        outerRadius={100}
+                        cy="45%"
+                        innerRadius={80}
+                        outerRadius={140}
                         paddingAngle={2}
                         dataKey="value"
                       >
@@ -263,7 +263,7 @@ export default function Budgets() {
                       />
                       <Legend 
                         verticalAlign="bottom" 
-                        height={36}
+                        height={50}
                         formatter={(value: any) => {
                           const budget = budgets.find((b: any) => b.category === value);
                           const percentage = ((parseFloat(budget.monthlyLimit) / totals.totalBudget) * 100).toFixed(0);
@@ -274,7 +274,7 @@ export default function Budgets() {
                   </ResponsiveContainer>
                   
                   {/* Center text */}
-                  <div className="relative -mt-52 pointer-events-none">
+                  <div className="relative -mt-80 pointer-events-none">
                     <div className="text-center">
                       <p className="text-sm text-muted-foreground">Total Budget</p>
                       <p className="text-2xl font-bold text-foreground">{formatCurrency(totals.totalBudget)}</p>
@@ -286,7 +286,7 @@ export default function Budgets() {
           </Card>
 
           {/* Budgets List */}
-          <Card className="rounded-xl animate-fadeIn lg:col-span-2" style={{animationDelay: '600ms'}}>
+          <Card className="rounded-xl animate-fadeIn xl:col-span-3 lg:col-span-1" style={{animationDelay: '600ms'}}>
             <CardHeader className="pb-6">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-xl font-semibold text-foreground">Budget Details</CardTitle>
