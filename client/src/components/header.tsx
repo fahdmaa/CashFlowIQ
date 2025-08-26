@@ -1,7 +1,14 @@
-import { Plus, User, Moon, Sun } from "lucide-react";
+import { Plus, User, Moon, Sun, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
+import { getCurrentUser, logout } from "@/lib/auth";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface HeaderProps {
   onAddTransaction: () => void;
@@ -9,7 +16,8 @@ interface HeaderProps {
 
 export default function Header({ onAddTransaction }: HeaderProps) {
   const [isDark, setIsDark] = useState(false);
-  const [location] = useLocation();
+  const [location, navigate] = useLocation();
+  const currentUser = getCurrentUser();
 
   useEffect(() => {
     const stored = localStorage.getItem("theme");
@@ -24,6 +32,11 @@ export default function Header({ onAddTransaction }: HeaderProps) {
     document.documentElement.classList.toggle("dark", next);
     localStorage.setItem("theme", next ? "dark" : "light");
     setIsDark(next);
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
   };
 
   return (
@@ -101,9 +114,22 @@ export default function Header({ onAddTransaction }: HeaderProps) {
               <Plus className="h-4 w-4 mr-2" />
               Add Transaction
             </Button>
-            <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center transition-all hover:scale-110 cursor-pointer">
-              <User className="h-4 w-4 text-muted-foreground" />
-            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center transition-all hover:scale-110 cursor-pointer">
+                  <User className="h-4 w-4 text-muted-foreground" />
+                </div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <div className="px-2 py-1.5 text-sm font-medium">
+                  {currentUser}
+                </div>
+                <DropdownMenuItem onClick={handleLogout}>
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Logout
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </div>
