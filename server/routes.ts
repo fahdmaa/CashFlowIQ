@@ -1,15 +1,15 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { PocketBaseStorage } from "./pocketbase-storage";
 import { insertTransactionSchema, insertBudgetSchema, updateBudgetSchema, insertCategorySchema, loginSchema } from "@shared/schema";
 import { z } from "zod";
 import { AuthenticatedRequest } from "./types";
+import { randomUUID } from "crypto";
 
-// Use PocketBase storage
-const pbStorage = new PocketBaseStorage();
+// Simple token store for authentication
+const activeTokens = new Map<string, string>(); // token -> userId
 
-// Middleware to check PocketBase authentication
+// Middleware to check authentication
 const requireAuth = async (req: AuthenticatedRequest, res: any, next: any) => {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -17,20 +17,22 @@ const requireAuth = async (req: AuthenticatedRequest, res: any, next: any) => {
   }
 
   const token = authHeader.substring(7);
-  try {
-    const pb = pbStorage.getPocketBaseInstance();
-    pb.authStore.save(token, null);
-    
-    // Verify token is valid by trying to get current user
-    const user = await pb.collection('users').authRefresh();
-    req.user = {
-      id: user.record.id,
-      username: user.record.username
-    };
-    next();
-  } catch (error) {
+  const userId = activeTokens.get(token);
+  
+  if (!userId) {
     return res.status(401).json({ message: "Invalid token" });
   }
+  
+  const user = await storage.getUserById(userId);
+  if (!user) {
+    return res.status(401).json({ message: "User not found" });
+  }
+  
+  req.user = {
+    id: user.id,
+    username: user.username
+  };
+  next();
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -38,16 +40,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/auth/login", async (req, res) => {
     try {
       const { username, password } = loginSchema.parse(req.body);
-      const pb = pbStorage.getPocketBaseInstance();
       
-      const authData = await pb.collection('users').authWithPassword(username, password);
+      const user = await storage.getUserByUsername(username);
+      if (!user || user.password !== password) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+      
+      // Generate auth token
+      const token = randomUUID();
+      activeTokens.set(token, user.id);
       
       res.json({ 
         user: { 
-          id: authData.record.id, 
-          username: authData.record.username 
+          id: user.id, 
+          username: user.username 
         },
-        token: pb.authStore.token
+        token
       });
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -58,9 +66,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/auth/logout", (req, res) => {
-    const pb = pbStorage.getPocketBaseInstance();
-    pb.authStore.clear();
+  app.post("/api/auth/logout", requireAuth, (req: AuthenticatedRequest, res) => {
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.substring(7);
+      activeTokens.delete(token);
+    }
     res.json({ message: "Logged out successfully" });
   });
 
@@ -73,7 +84,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Transactions
   app.get("/api/transactions", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {
-      const transactions = await pbStorage.getTransactions(req.user!.id);
+      const transactions = await storage.getTransactions(req.user!.id);
       res.json(transactions);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch transactions" });
@@ -83,7 +94,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/transactions", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {
       const validatedData = insertTransactionSchema.parse(req.body);
-      const transaction = await pbStorage.createTransaction(req.user!.id, validatedData);
+      const transaction = await storage.createTransaction(req.user!.id, validatedData);
       
       // Generate insights based on the new transaction
       await generateInsights(req.user!.id, transaction);
@@ -101,7 +112,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/transactions/category/:category", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {
       const { category } = req.params;
-      const transactions = await pbStorage.getTransactionsByCategory(req.user!.id, category);
+      const transactions = await storage.getTransactionsByCategory(req.user!.id, category);
       res.json(transactions);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch transactions by category" });
@@ -111,7 +122,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Budgets
   app.get("/api/budgets", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {
-      const budgets = await pbStorage.getBudgets(req.user!.id);
+      const budgets = await storage.getBudgets(req.user!.id);
       res.json(budgets);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch budgets" });
@@ -121,7 +132,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/budgets", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {
       const validatedData = insertBudgetSchema.parse(req.body);
-      const budget = await pbStorage.createBudget(req.user!.id, validatedData);
+      const budget = await storage.createBudget(req.user!.id, validatedData);
       res.json(budget);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -136,7 +147,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { category } = req.params;
       const validatedData = updateBudgetSchema.parse(req.body);
-      const budget = await pbStorage.updateBudgetLimit(req.user!.id, category, validatedData.monthlyLimit);
+      const budget = await storage.updateBudgetLimit(req.user!.id, category, validatedData.monthlyLimit);
       if (!budget) {
         return res.status(404).json({ message: "Budget not found" });
       }
@@ -153,7 +164,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Categories
   app.get("/api/categories", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {
-      const categories = await pbStorage.getCategories(req.user!.id);
+      const categories = await storage.getCategories(req.user!.id);
       res.json(categories);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch categories" });
@@ -163,7 +174,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/categories", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {
       const validated = insertCategorySchema.parse(req.body);
-      const category = await pbStorage.createCategory(req.user!.id, validated);
+      const category = await storage.createCategory(req.user!.id, validated);
       res.json(category);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -177,7 +188,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Insights
   app.get("/api/insights", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {
-      const insights = await pbStorage.getInsights(req.user!.id);
+      const insights = await storage.getInsights(req.user!.id);
       res.json(insights);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch insights" });
@@ -187,7 +198,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/insights/:id/read", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {
       const { id } = req.params;
-      await pbStorage.markInsightAsRead(req.user!.id, id);
+      await storage.markInsightAsRead(req.user!.id, id);
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ message: "Failed to mark insight as read" });
@@ -202,7 +213,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - parseInt(days as string));
       
-      const transactions = await pbStorage.getTransactionsByDateRange(req.user!.id, startDate, endDate);
+      const transactions = await storage.getTransactionsByDateRange(req.user!.id, startDate, endDate);
       const expenseTransactions = transactions.filter(t => t.type === "expense");
       
       // Group by date
@@ -225,7 +236,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const startOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
       const endOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
       
-      const monthlyTransactions = await pbStorage.getTransactionsByDateRange(req.user!.id, startOfMonth, endOfMonth);
+      const monthlyTransactions = await storage.getTransactionsByDateRange(req.user!.id, startOfMonth, endOfMonth);
       
       const monthlyIncome = monthlyTransactions
         .filter(t => t.type === "income")
@@ -258,14 +269,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 }
 
 async function generateInsights(userId: string, transaction: any) {
-  const budgets = await pbStorage.getBudgets(userId);
+  const budgets = await storage.getBudgets(userId);
   const budget = budgets.find(b => b.category === transaction.category);
   
   if (budget && transaction.type === "expense") {
     const spentPercentage = (parseFloat(budget.currentSpent) / parseFloat(budget.monthlyLimit)) * 100;
     
     if (spentPercentage > 100) {
-      await pbStorage.createInsight(userId, {
+      await storage.createInsight(userId, {
         type: "warning",
         title: "Budget Exceeded",
         message: `You've exceeded your ${transaction.category} budget by DH${(parseFloat(budget.currentSpent) - parseFloat(budget.monthlyLimit)).toFixed(2)} this month.`,
@@ -273,7 +284,7 @@ async function generateInsights(userId: string, transaction: any) {
         isRead: "false"
       });
     } else if (spentPercentage > 80) {
-      await pbStorage.createInsight(userId, {
+      await storage.createInsight(userId, {
         type: "warning",
         title: "Budget Alert",
         message: `You've used ${spentPercentage.toFixed(0)}% of your ${transaction.category} budget this month.`,

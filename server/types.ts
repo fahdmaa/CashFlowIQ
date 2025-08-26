@@ -1,19 +1,8 @@
-import "express-session";
+import type { Request } from "express";
 
-declare module "express-session" {
-  interface SessionData {
-    userId?: string;
-    username?: string;
-  }
-}
-
-export interface AuthenticatedRequest extends Express.Request {
+export interface AuthenticatedRequest extends Request {
   user?: {
     id: string;
     username: string;
   };
-  session: {
-    userId?: string;
-    username?: string;
-  } & Express.Session;
 }

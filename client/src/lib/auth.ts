@@ -1,42 +1,70 @@
-import PocketBase from 'pocketbase';
-
 interface User {
   id: string;
   username: string;
 }
 
-const pb = new PocketBase(import.meta.env.VITE_POCKETBASE_URL || 'http://127.0.0.1:8090');
+interface AuthResponse {
+  user: User;
+  token: string;
+}
 
 export const login = async (username: string, password: string): Promise<User> => {
-  try {
-    const authData = await pb.collection('users').authWithPassword(username, password);
-    return {
-      id: authData.record.id,
-      username: authData.record.username
-    };
-  } catch (error: any) {
+  const response = await fetch("/api/auth/login", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ username, password }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
     throw new Error(error.message || "Login failed");
   }
+
+  const data: AuthResponse = await response.json();
+  
+  // Store auth token
+  localStorage.setItem("authToken", data.token);
+  localStorage.setItem("currentUser", JSON.stringify(data.user));
+  
+  return data.user;
 };
 
 export const logout = async (): Promise<void> => {
-  pb.authStore.clear();
+  try {
+    await fetch("/api/auth/logout", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${localStorage.getItem("authToken")}`
+      }
+    });
+  } catch (error) {
+    // Continue with logout even if API call fails
+  }
+  
+  localStorage.removeItem("authToken");
+  localStorage.removeItem("currentUser");
 };
 
 export const getCurrentUser = (): User | null => {
-  if (pb.authStore.isValid && pb.authStore.model) {
-    return {
-      id: pb.authStore.model.id,
-      username: pb.authStore.model.username
-    };
+  const userStr = localStorage.getItem("currentUser");
+  if (userStr) {
+    try {
+      return JSON.parse(userStr);
+    } catch {
+      return null;
+    }
   }
   return null;
 };
 
 export const isAuthenticated = (): boolean => {
-  return pb.authStore.isValid;
+  const token = localStorage.getItem("authToken");
+  const user = localStorage.getItem("currentUser");
+  return !!(token && user);
 };
 
-export const getPocketBase = (): PocketBase => {
-  return pb;
+export const getAuthToken = (): string | null => {
+  return localStorage.getItem("authToken");
 };
