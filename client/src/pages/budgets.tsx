@@ -276,8 +276,8 @@ export default function Budgets() {
                   {/* Center text */}
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                     <div className="text-center mt-[-50px]">
-                      <p className="text-sm text-muted-foreground">Total Budget</p>
-                      <p className="text-2xl font-bold text-foreground">{formatCurrency(totals.totalBudget)}</p>
+                      <p className="text-xs text-muted-foreground">Total Budget</p>
+                      <p className="text-lg font-bold text-foreground">{formatCurrency(totals.totalBudget)}</p>
                     </div>
                   </div>
                 </div>
