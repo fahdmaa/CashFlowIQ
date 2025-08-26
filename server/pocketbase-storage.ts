@@ -5,14 +5,17 @@ import { IStorage } from "./storage";
 export class PocketBaseStorage implements IStorage {
   private pb: PocketBase;
 
-  constructor(pbUrl = 'http://127.0.0.1:8090') {
-    this.pb = new PocketBase(pbUrl);
+  constructor(pbUrl?: string) {
+    const url = pbUrl || process.env.VITE_POCKETBASE_URL || 'http://127.0.0.1:8090';
+    this.pb = new PocketBase(url);
   }
 
   // Helper method to authenticate as admin for server-side operations
   private async authenticateAsAdmin() {
     try {
-      await this.pb.admins.authWithPassword('admin@cashflowiq.com', 'admin123456');
+      const email = process.env.POCKETBASE_ADMIN_EMAIL || 'admin@cashflowiq.com';
+      const password = process.env.POCKETBASE_ADMIN_PASSWORD || 'admin123456';
+      await this.pb.admins.authWithPassword(email, password);
     } catch (error) {
       console.error('Failed to authenticate as admin:', error);
     }
