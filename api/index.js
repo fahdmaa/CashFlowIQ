@@ -21,7 +21,7 @@ app.use((req, res, next) => {
 });
 
 // Initialize routes
-await registerRoutes(app);
+const httpServer = await registerRoutes(app);
 
 // Error handling
 app.use((err, req, res, next) => {
@@ -30,4 +30,5 @@ app.use((err, req, res, next) => {
   res.status(status).json({ message });
 });
 
+// Export for Vercel serverless functions
 export default app;
