@@ -17,7 +17,7 @@ interface HeaderProps {
 export default function Header({ onAddTransaction }: HeaderProps) {
   const [isDark, setIsDark] = useState(false);
   const [location, navigate] = useLocation();
-  const currentUser = getCurrentUser();
+  const [currentUser, setCurrentUser] = useState<string | null>(null);
 
   useEffect(() => {
     const stored = localStorage.getItem("theme");
@@ -25,6 +25,10 @@ export default function Header({ onAddTransaction }: HeaderProps) {
       document.documentElement.classList.add("dark");
       setIsDark(true);
     }
+
+    // Load current user
+    const user = getCurrentUser();
+    setCurrentUser(user?.username || null);
   }, []);
 
   const toggleTheme = () => {
@@ -34,9 +38,13 @@ export default function Header({ onAddTransaction }: HeaderProps) {
     setIsDark(next);
   };
 
-  const handleLogout = () => {
-    logout();
-    navigate("/login");
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate("/login");
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
   };
 
   return (

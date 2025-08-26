@@ -3,8 +3,16 @@ import { pgTable, text, varchar, decimal, timestamp, jsonb } from "drizzle-orm/p
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+export const users = pgTable("users", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  username: text("username").notNull().unique(),
+  password: text("password").notNull(),
+  createdAt: timestamp("created_at").default(sql`now()`).notNull(),
+});
+
 export const transactions = pgTable("transactions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
   amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
   description: text("description").notNull(),
   category: text("category").notNull(),
@@ -15,7 +23,8 @@ export const transactions = pgTable("transactions", {
 
 export const budgets = pgTable("budgets", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  category: text("category").notNull().unique(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  category: text("category").notNull(),
   monthlyLimit: decimal("monthly_limit", { precision: 12, scale: 2 }).notNull(),
   currentSpent: decimal("current_spent", { precision: 12, scale: 2 }).default("0").notNull(),
   createdAt: timestamp("created_at").default(sql`now()`).notNull(),
@@ -23,7 +32,8 @@ export const budgets = pgTable("budgets", {
 
 export const categories = pgTable("categories", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  name: text("name").notNull().unique(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  name: text("name").notNull(),
   type: text("type").notNull(), // 'income' or 'expense'
   color: text("color").notNull(),
   icon: text("icon").notNull(),
@@ -32,6 +42,7 @@ export const categories = pgTable("categories", {
 
 export const insights = pgTable("insights", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
   type: text("type").notNull(), // 'warning', 'success', 'info'
   title: text("title").notNull(),
   message: text("message").notNull(),
@@ -40,8 +51,14 @@ export const insights = pgTable("insights", {
   createdAt: timestamp("created_at").default(sql`now()`).notNull(),
 });
 
+export const insertUserSchema = createInsertSchema(users).omit({
+  id: true,
+  createdAt: true,
+});
+
 export const insertTransactionSchema = createInsertSchema(transactions).omit({
   id: true,
+  userId: true,
   createdAt: true,
 }).extend({
   date: z.coerce.date(),
@@ -49,12 +66,14 @@ export const insertTransactionSchema = createInsertSchema(transactions).omit({
 
 export const insertBudgetSchema = createInsertSchema(budgets).omit({
   id: true,
+  userId: true,
   currentSpent: true,
   createdAt: true,
 });
 
 export const insertCategorySchema = createInsertSchema(categories).omit({
   id: true,
+  userId: true,
   createdAt: true,
 });
 
@@ -64,9 +83,17 @@ export const updateBudgetSchema = z.object({
 
 export const insertInsightSchema = createInsertSchema(insights).omit({
   id: true,
+  userId: true,
   createdAt: true,
 });
 
+export const loginSchema = z.object({
+  username: z.string().min(1),
+  password: z.string().min(1),
+});
+
+export type InsertUser = z.infer<typeof insertUserSchema>;
+export type User = typeof users.$inferSelect;
 export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
 export type Transaction = typeof transactions.$inferSelect;
 export type InsertBudget = z.infer<typeof insertBudgetSchema>;
@@ -76,3 +103,4 @@ export type Category = typeof categories.$inferSelect;
 export type UpdateBudget = z.infer<typeof updateBudgetSchema>;
 export type InsertInsight = z.infer<typeof insertInsightSchema>;
 export type Insight = typeof insights.$inferSelect;
+export type LoginRequest = z.infer<typeof loginSchema>;

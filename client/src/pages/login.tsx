@@ -5,11 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-
-const VALID_CREDENTIALS = [
-  { username: "fahdmaa", password: "fahdmaa123" },
-  { username: "farahfa", password: "farahfa123" },
-];
+import { login } from "@/lib/auth";
 
 export default function Login() {
   const [, navigate] = useLocation();
@@ -23,20 +19,14 @@ export default function Login() {
     setError("");
     setIsLoading(true);
 
-    const isValid = VALID_CREDENTIALS.some(
-      (cred) => cred.username === username && cred.password === password
-    );
-
-    setTimeout(() => {
-      if (isValid) {
-        localStorage.setItem("isAuthenticated", "true");
-        localStorage.setItem("currentUser", username);
-        navigate("/");
-      } else {
-        setError("Invalid username or password");
-      }
+    try {
+      await login(username, password);
+      navigate("/");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Login failed");
+    } finally {
       setIsLoading(false);
-    }, 500);
+    }
   };
 
   return (
