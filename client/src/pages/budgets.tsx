@@ -222,7 +222,7 @@ export default function Budgets() {
                   No budget data available
                 </div>
               ) : (
-                <div className="h-96">
+                <div className="h-96 relative">
                   <ResponsiveContainer width="100%" height="100%">
                     <RechartsChart>
                       <Pie
@@ -274,8 +274,8 @@ export default function Budgets() {
                   </ResponsiveContainer>
                   
                   {/* Center text */}
-                  <div className="relative -mt-80 pointer-events-none">
-                    <div className="text-center">
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div className="text-center mt-[-50px]">
                       <p className="text-sm text-muted-foreground">Total Budget</p>
                       <p className="text-2xl font-bold text-foreground">{formatCurrency(totals.totalBudget)}</p>
                     </div>
