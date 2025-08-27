@@ -1,15 +1,12 @@
 {
   "buildCommand": "npm run build",
   "outputDirectory": "dist/public",
+  "functions": {
+    "api/**/*.ts": {
+      "runtime": "@vercel/node"
+    }
+  },
   "rewrites": [
-    {
-      "source": "/api/supabase/(.*)",
-      "destination": "/api/supabase/[...path]"
-    },
-    {
-      "source": "/api/(.*)",
-      "destination": "/api/[...path]"
-    },
     {
       "source": "/(.*)",
       "destination": "/$1"
