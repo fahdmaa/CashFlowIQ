@@ -100,7 +100,17 @@ export const getBudgets = async () => {
     .order('category');
   
   if (error) throw new Error(error.message);
-  return data || [];
+  
+  // Transform snake_case to camelCase to match frontend expectations
+  return (data || []).map(budget => ({
+    id: budget.id,
+    category: budget.category,
+    monthlyLimit: budget.monthly_limit,
+    currentSpent: budget.current_spent,
+    user_id: budget.user_id,
+    created_at: budget.created_at,
+    updated_at: budget.updated_at
+  }));
 };
 
 export const createBudget = async (budget: any) => {
@@ -122,7 +132,17 @@ export const createBudget = async (budget: any) => {
     .single();
   
   if (error) throw new Error(error.message);
-  return data;
+  
+  // Transform response to match frontend expectations
+  return {
+    id: data.id,
+    category: data.category,
+    monthlyLimit: data.monthly_limit,
+    currentSpent: data.current_spent,
+    user_id: data.user_id,
+    created_at: data.created_at,
+    updated_at: data.updated_at
+  };
 };
 
 export const updateBudget = async (category: string, monthlyLimit: number) => {
@@ -141,7 +161,17 @@ export const updateBudget = async (category: string, monthlyLimit: number) => {
     .single();
   
   if (error) throw new Error(error.message);
-  return data;
+  
+  // Transform response to match frontend expectations
+  return {
+    id: data.id,
+    category: data.category,
+    monthlyLimit: data.monthly_limit,
+    currentSpent: data.current_spent,
+    user_id: data.user_id,
+    created_at: data.created_at,
+    updated_at: data.updated_at
+  };
 };
 
 // Analytics
