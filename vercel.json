@@ -3,6 +3,10 @@
   "outputDirectory": "dist/public",
   "rewrites": [
     {
+      "source": "/api/supabase/(.*)",
+      "destination": "/api/supabase/[...path]"
+    },
+    {
       "source": "/api/(.*)",
       "destination": "/api/[...path]"
     },

@@ -1,0 +1,45 @@
+# Quick Azure Deployment Commands for CashFlowIQ
+
+## Step-by-step deployment commands:
+
+# 1. Login to Azure
+az login
+
+# 2. Create Resource Group
+az group create --name cashflowiq-rg --location eastus
+
+# 3. Create App Service Plan
+az appservice plan create --name cashflowiq-plan --resource-group cashflowiq-rg --location eastus --sku B1 --is-linux
+
+# 4. Create Web App
+az webapp create --name cashflowiq-app --resource-group cashflowiq-rg --plan cashflowiq-plan --runtime "NODE|20-lts"
+
+# 5. Configure Environment Variables
+az webapp config appsettings set --name cashflowiq-app --resource-group cashflowiq-rg --settings VITE_POCKETBASE_URL="https://your-app.pockethost.io" POCKETBASE_ADMIN_EMAIL="admin@cashflowiq.com" POCKETBASE_ADMIN_PASSWORD="SecurePassword123!" NODE_ENV="production" PORT="8080" SCM_DO_BUILD_DURING_DEPLOYMENT="true"
+
+# 6. Set Startup Command
+az webapp config set --name cashflowiq-app --resource-group cashflowiq-rg --startup-file "npm run azure:start"
+
+# 7. Enable Git Deployment
+az webapp deployment source config-local-git --name cashflowiq-app --resource-group cashflowiq-rg
+
+# 8. Get deployment URL and add remote
+DEPLOYMENT_URL=$(az webapp deployment list-publishing-credentials --name cashflowiq-app --resource-group cashflowiq-rg --query "{url:scmUri}" --output tsv)
+git remote add azure $DEPLOYMENT_URL
+
+# 9. Deploy
+git push azure main
+
+# 10. Open the application
+az webapp browse --name cashflowiq-app --resource-group cashflowiq-rg
+
+## Useful monitoring commands:
+
+# View logs
+az webapp log tail --name cashflowiq-app --resource-group cashflowiq-rg
+
+# Restart app
+az webapp restart --name cashflowiq-app --resource-group cashflowiq-rg
+
+# Check app status
+az webapp show --name cashflowiq-app --resource-group cashflowiq-rg --query "state"
