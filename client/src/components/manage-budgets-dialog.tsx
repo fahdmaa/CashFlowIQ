@@ -6,6 +6,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import AddCategoryModal from "./add-category-modal";
 import { directApiRequest } from "@/lib/direct-query-client";
+import { useToast } from "@/hooks/use-toast";
 
 interface ManageBudgetsDialogProps {
   open: boolean;
@@ -15,8 +16,10 @@ interface ManageBudgetsDialogProps {
 function ManageBudgetsDialog({ open, onOpenChange }: ManageBudgetsDialogProps) {
   const { data: budgets } = useQuery<any[]>({ queryKey: ["/api/budgets"] });
   const [values, setValues] = useState<Record<string, string>>({});
+  const [isSaving, setIsSaving] = useState(false);
   const queryClient = useQueryClient();
   const [addCategoryOpen, setAddCategoryOpen] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     if (budgets) {
@@ -30,20 +33,51 @@ function ManageBudgetsDialog({ open, onOpenChange }: ManageBudgetsDialogProps) {
 
   const updateBudget = useMutation({
     mutationFn: async ({ category, monthlyLimit }: { category: string; monthlyLimit: string }) => {
-      return await directApiRequest("PUT", `/api/budgets/${encodeURIComponent(category)}`, { 
+      console.log(`Updating budget API call for ${category} with limit: ${monthlyLimit}`);
+      const result = await directApiRequest("PUT", `/api/budgets/${encodeURIComponent(category)}`, { 
         monthlyLimit: parseFloat(monthlyLimit) 
       });
+      console.log(`Update result for ${category}:`, result);
+      return result;
     },
+    onError: (error, variables) => {
+      console.error(`Failed to update budget for ${variables.category}:`, error);
+    }
   });
 
   const handleSave = async () => {
-    await Promise.all(
-      Object.entries(values).map(([category, monthlyLimit]) =>
-        updateBudget.mutateAsync({ category, monthlyLimit })
-      )
-    );
-    queryClient.invalidateQueries({ queryKey: ["/api/budgets"] });
-    onOpenChange(false);
+    if (isSaving) return; // Prevent double-clicking
+    
+    setIsSaving(true);
+    try {
+      console.log('Saving budget values:', values);
+      
+      await Promise.all(
+        Object.entries(values).map(([category, monthlyLimit]) => {
+          console.log(`Updating budget for ${category}: ${monthlyLimit}`);
+          return updateBudget.mutateAsync({ category, monthlyLimit });
+        })
+      );
+      
+      console.log('All budget updates completed');
+      queryClient.invalidateQueries({ queryKey: ["/api/budgets"] });
+      
+      toast({
+        title: "Success",
+        description: "Budgets updated successfully",
+      });
+      
+      onOpenChange(false);
+    } catch (error) {
+      console.error('Error saving budgets:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to save budgets",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const changeValue = (category: string, delta: number) => {
@@ -110,7 +144,9 @@ function ManageBudgetsDialog({ open, onOpenChange }: ManageBudgetsDialogProps) {
           </div>
         </div>
         <DialogFooter>
-          <Button onClick={handleSave} data-testid="button-save-budgets">Save</Button>
+          <Button onClick={handleSave} disabled={isSaving} data-testid="button-save-budgets">
+            {isSaving ? "Saving..." : "Save"}
+          </Button>
         </DialogFooter>
       </DialogContent>
       <AddCategoryModal open={addCategoryOpen} onOpenChange={setAddCategoryOpen} />
