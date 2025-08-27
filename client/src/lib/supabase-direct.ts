@@ -152,25 +152,55 @@ export const updateBudget = async (category: string, monthlyLimit: number) => {
   const { data: { user }, error: userError } = await supabase.auth.getUser();
   if (userError || !user) throw new Error('User not authenticated');
   
-  const { data, error } = await supabase
+  // First, try to update existing budget
+  const { data: updateData, error: updateError } = await supabase
     .from('budgets')
     .update({ monthly_limit: monthlyLimit })
     .eq('user_id', user.id)
     .eq('category', category)
+    .select();
+  
+  // If update succeeded and found a row, return it
+  if (!updateError && updateData && updateData.length > 0) {
+    const data = updateData[0];
+    return {
+      id: data.id,
+      category: data.category,
+      monthlyLimit: data.monthly_limit,
+      currentSpent: data.current_spent,
+      user_id: data.user_id,
+      created_at: data.created_at,
+      updated_at: data.updated_at
+    };
+  }
+  
+  // If budget doesn't exist, create it
+  console.log(`Budget for ${category} doesn't exist, creating new one`);
+  const { data: insertData, error: insertError } = await supabase
+    .from('budgets')
+    .insert({
+      user_id: user.id,
+      category: category,
+      monthly_limit: monthlyLimit,
+      current_spent: 0
+    })
     .select()
     .single();
   
-  if (error) throw new Error(error.message);
+  if (insertError) {
+    console.error('Supabase insert error:', insertError);
+    throw new Error(insertError.message);
+  }
   
   // Transform response to match frontend expectations
   return {
-    id: data.id,
-    category: data.category,
-    monthlyLimit: data.monthly_limit,
-    currentSpent: data.current_spent,
-    user_id: data.user_id,
-    created_at: data.created_at,
-    updated_at: data.updated_at
+    id: insertData.id,
+    category: insertData.category,
+    monthlyLimit: insertData.monthly_limit,
+    currentSpent: insertData.current_spent,
+    user_id: insertData.user_id,
+    created_at: insertData.created_at,
+    updated_at: insertData.updated_at
   };
 };
 
