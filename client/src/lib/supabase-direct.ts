@@ -1,28 +1,26 @@
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from './supabase-auth';
 import { getAuthToken } from './supabase-auth';
 
-// Initialize Supabase client
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL!;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY!;
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
 // Set auth token for all requests
-const setAuthToken = () => {
+const setAuthToken = async () => {
   const token = getAuthToken();
-  if (token) {
-    supabase.auth.setSession({
-      access_token: token,
-      refresh_token: localStorage.getItem('refreshToken') || '',
-      expires_in: 3600,
-      token_type: 'bearer',
-      user: null as any
-    });
+  const refreshToken = localStorage.getItem('refreshToken');
+  
+  if (token && refreshToken) {
+    try {
+      await supabase.auth.setSession({
+        access_token: token,
+        refresh_token: refreshToken
+      });
+    } catch (error) {
+      console.error('Error setting auth session:', error);
+    }
   }
 };
 
 // Transactions
 export const getTransactions = async () => {
-  setAuthToken();
+  await setAuthToken();
   const { data, error } = await supabase
     .from('transactions')
     .select('*')
@@ -33,7 +31,7 @@ export const getTransactions = async () => {
 };
 
 export const createTransaction = async (transaction: any) => {
-  setAuthToken();
+  await setAuthToken();
   
   // Get current user
   const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -58,7 +56,7 @@ export const createTransaction = async (transaction: any) => {
 
 // Categories
 export const getCategories = async () => {
-  setAuthToken();
+  await setAuthToken();
   const { data, error } = await supabase
     .from('categories')
     .select('*')
@@ -69,7 +67,7 @@ export const getCategories = async () => {
 };
 
 export const createCategory = async (category: any) => {
-  setAuthToken();
+  await setAuthToken();
   
   // Get current user
   const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -92,7 +90,7 @@ export const createCategory = async (category: any) => {
 };
 
 export const deleteCategory = async (categoryId: string) => {
-  setAuthToken();
+  await setAuthToken();
   
   // Get current user
   const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -112,7 +110,7 @@ export const deleteCategory = async (categoryId: string) => {
 
 export const deleteBudget = async (budgetId: string) => {
   console.log(`deleteBudget called with budgetId: ${budgetId}`);
-  setAuthToken();
+  await setAuthToken();
   
   // Get current user
   const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -149,7 +147,7 @@ export const deleteBudget = async (budgetId: string) => {
 
 // Budgets
 export const getBudgets = async () => {
-  setAuthToken();
+  await setAuthToken();
   const { data, error } = await supabase
     .from('budgets')
     .select('*')
@@ -175,7 +173,7 @@ export const getBudgets = async () => {
 };
 
 export const createBudget = async (budget: any) => {
-  setAuthToken();
+  await setAuthToken();
   
   // Get current user
   const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -207,7 +205,7 @@ export const createBudget = async (budget: any) => {
 };
 
 export const updateBudget = async (category: string, monthlyLimit: number) => {
-  setAuthToken();
+  await setAuthToken();
   
   // Get current user
   const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -267,7 +265,7 @@ export const updateBudget = async (category: string, monthlyLimit: number) => {
 
 // Clean up duplicate budgets (one-time function)
 export const cleanupDuplicateBudgets = async () => {
-  setAuthToken();
+  await setAuthToken();
   
   // Get current user
   const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -289,7 +287,7 @@ export const cleanupDuplicateBudgets = async () => {
 
 // Analytics
 export const getOverviewAnalytics = async () => {
-  setAuthToken();
+  await setAuthToken();
   
   const currentMonth = new Date();
   const startOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
