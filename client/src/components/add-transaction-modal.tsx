@@ -34,6 +34,11 @@ export default function AddTransactionModal({ isOpen, onClose }: AddTransactionM
   const queryClient = useQueryClient();
   const [suggestedCategory, setSuggestedCategory] = useState<string>("");
   const { data: categories } = useQuery<any[]>({ queryKey: ["/api/categories"] });
+  
+  // Debug logging for categories
+  useEffect(() => {
+    console.log('AddTransactionModal: Categories data updated:', categories);
+  }, [categories]);
 
   const {
     register,
@@ -112,12 +117,25 @@ export default function AddTransactionModal({ isOpen, onClose }: AddTransactionM
 
   // Get filtered categories based on transaction type
   const getFilteredCategories = () => {
-    if (!categories) return [];
+    console.log('AddTransactionModal: getFilteredCategories called', {
+      categories: categories?.length || 0,
+      watchedType,
+      categoriesData: categories
+    });
+    
+    if (!categories) {
+      console.log('AddTransactionModal: No categories data, returning empty array');
+      return [];
+    }
     
     if (watchedType === "income") {
-      return categories.filter(c => c.type === "income" || c.name === "Income");
+      const filtered = categories.filter(c => c.type === "income" || c.name === "Income");
+      console.log('AddTransactionModal: Filtered income categories:', filtered);
+      return filtered;
     } else {
-      return categories.filter(c => c.type === "expense");
+      const filtered = categories.filter(c => c.type === "expense");
+      console.log('AddTransactionModal: Filtered expense categories:', filtered);
+      return filtered;
     }
   };
 

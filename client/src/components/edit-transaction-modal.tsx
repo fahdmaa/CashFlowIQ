@@ -35,6 +35,11 @@ export default function EditTransactionModal({ isOpen, onClose, transaction }: E
   const queryClient = useQueryClient();
   const [suggestedCategory, setSuggestedCategory] = useState<string>("");
   const { data: categories } = useQuery<any[]>({ queryKey: ["/api/categories"] });
+  
+  // Debug logging for categories
+  useEffect(() => {
+    console.log('EditTransactionModal: Categories data updated:', categories);
+  }, [categories]);
 
   const {
     register,

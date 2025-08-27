@@ -100,13 +100,22 @@ export const updateTransaction = async (transactionId: string, transaction: any)
 
 // Categories
 export const getCategories = async () => {
+  console.log('getCategories: Fetching categories from database...');
   await setAuthToken();
+  
   const { data, error } = await supabase
     .from('categories')
     .select('*')
     .order('name');
   
-  if (error) throw new Error(error.message);
+  console.log('getCategories: Database result:', { data, error });
+  
+  if (error) {
+    console.error('getCategories: Error fetching categories:', error);
+    throw new Error(error.message);
+  }
+  
+  console.log('getCategories: Returning categories:', data?.length || 0, 'items');
   return data || [];
 };
 

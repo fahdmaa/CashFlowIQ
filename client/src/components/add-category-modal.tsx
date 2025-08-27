@@ -47,10 +47,23 @@ export default function AddCategoryModal({ open, onOpenChange }: AddCategoryModa
       console.log('AddCategoryModal: Category creation result:', result);
       return result;
     },
-    onSuccess: () => {
-      console.log('AddCategoryModal: Category creation successful');
+    onSuccess: (data) => {
+      console.log('AddCategoryModal: Category creation successful', data);
+      console.log('AddCategoryModal: Invalidating category queries...');
+      
+      // More aggressive query invalidation
       queryClient.invalidateQueries({ queryKey: ["/api/categories"] });
       queryClient.invalidateQueries({ queryKey: ["/api/budgets"] });
+      queryClient.removeQueries({ queryKey: ["/api/categories"] }); // Force refetch
+      
+      // Also refresh all related queries
+      queryClient.invalidateQueries();
+      
+      setTimeout(() => {
+        console.log('AddCategoryModal: Delayed query invalidation...');
+        queryClient.invalidateQueries({ queryKey: ["/api/categories"] });
+      }, 100);
+      
       toast({
         title: "Success",
         description: "Category created successfully",
