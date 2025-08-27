@@ -1,9 +1,9 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
-import { getTransactions, createTransaction, updateTransaction, deleteTransaction, getCategories, createCategory, updateCategory, deleteCategory, deleteBudget, getOverviewAnalytics, getBudgets, createBudget, updateBudget, cleanupDuplicateBudgets, cleanupOrphanedCategories } from "./supabase-direct";
+import { getTransactions, createTransaction, updateTransaction, deleteTransaction, getCategories, createCategory, updateCategory, deleteCategory, deleteBudget, getOverviewAnalytics, getSpendingAnalytics, getBudgets, createBudget, updateBudget, cleanupDuplicateBudgets, cleanupOrphanedCategories } from "./supabase-direct";
 
 // Direct Supabase query function
 const getDirectQueryFn: QueryFunction = async ({ queryKey }) => {
-  const [route] = queryKey as string[];
+  const [route, params] = queryKey as [string, any?];
   
   try {
     switch (route) {
@@ -18,6 +18,11 @@ const getDirectQueryFn: QueryFunction = async ({ queryKey }) => {
       
       case "/api/analytics/overview":
         return await getOverviewAnalytics();
+      
+      case "/api/analytics/spending":
+        const days = params?.days || 7;
+        console.log(`Query function: Calling getSpendingAnalytics with ${days} days`);
+        return await getSpendingAnalytics(days);
       
       // Add more routes as needed
       default:

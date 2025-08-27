@@ -644,3 +644,62 @@ export const getOverviewAnalytics = async () => {
     savingsProgress: Math.round(savingsProgress * 100) / 100 // Round to 2 decimal places
   };
 };
+
+// Get spending analytics for chart (daily spending over specified period)
+export const getSpendingAnalytics = async (days: number = 7) => {
+  console.log(`getSpendingAnalytics called for ${days} days`);
+  await setAuthToken();
+  
+  // Get current user
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  if (userError || !user) {
+    console.error('User authentication failed:', userError);
+    throw new Error('User not authenticated');
+  }
+  
+  const endDate = new Date();
+  const startDate = new Date();
+  startDate.setDate(endDate.getDate() - days);
+  
+  console.log(`Fetching spending data from ${startDate.toISOString()} to ${endDate.toISOString()}`);
+  
+  const { data: transactions, error } = await supabase
+    .from('transactions')
+    .select('amount, date, type')
+    .eq('user_id', user.id)
+    .eq('type', 'expense')
+    .gte('date', startDate.toISOString())
+    .lte('date', endDate.toISOString())
+    .order('date', { ascending: true });
+    
+  if (error) {
+    console.error('Error fetching spending analytics:', error);
+    throw new Error(error.message);
+  }
+  
+  console.log(`Found ${transactions?.length || 0} expense transactions`);
+  
+  // Group transactions by date and sum spending per day
+  const spendingByDate: Record<string, number> = {};
+  
+  // Initialize all dates in the range with 0 (in reverse chronological order, oldest first)
+  for (let i = days - 1; i >= 0; i--) {
+    const date = new Date();
+    date.setDate(endDate.getDate() - i);
+    const dateKey = date.toISOString().split('T')[0]; // YYYY-MM-DD format
+    spendingByDate[dateKey] = 0;
+  }
+  
+  // Sum up actual spending by date
+  (transactions || []).forEach(transaction => {
+    const dateKey = transaction.date.split('T')[0]; // Extract date part
+    const amount = parseFloat(transaction.amount.toString());
+    if (spendingByDate.hasOwnProperty(dateKey)) {
+      spendingByDate[dateKey] += amount;
+    }
+  });
+  
+  console.log('Spending by date (oldest to newest):', spendingByDate);
+  
+  return spendingByDate;
+};
