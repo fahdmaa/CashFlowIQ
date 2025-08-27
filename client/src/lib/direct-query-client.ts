@@ -1,5 +1,5 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
-import { getTransactions, createTransaction, updateTransaction, getCategories, createCategory, deleteCategory, deleteBudget, getOverviewAnalytics, getBudgets, createBudget, updateBudget, cleanupDuplicateBudgets } from "./supabase-direct";
+import { getTransactions, createTransaction, updateTransaction, getCategories, createCategory, deleteCategory, deleteBudget, getOverviewAnalytics, getBudgets, createBudget, updateBudget, cleanupDuplicateBudgets, cleanupOrphanedCategories } from "./supabase-direct";
 
 // Direct Supabase query function
 const getDirectQueryFn: QueryFunction = async ({ queryKey }) => {
@@ -79,6 +79,11 @@ export async function directApiRequest(
   if (method === 'POST' && url === '/api/budgets/cleanup') {
     console.log('Direct API request - cleaning up duplicate budgets');
     return await cleanupDuplicateBudgets();
+  }
+  
+  if (method === 'POST' && url === '/api/categories/cleanup') {
+    console.log('Direct API request - cleaning up orphaned categories');
+    return await cleanupOrphanedCategories();
   }
   
   // Add more mutation handlers as needed

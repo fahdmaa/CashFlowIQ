@@ -182,28 +182,58 @@ export const deleteBudget = async (budgetId: string) => {
   
   console.log(`User authenticated: ${user.id}, attempting to delete budget: ${budgetId}`);
   
+  // First, get the budget to find the associated category
+  const { data: budgetData, error: budgetFetchError } = await supabase
+    .from('budgets')
+    .select('category')
+    .eq('id', budgetId)
+    .eq('user_id', user.id)
+    .single();
+  
+  if (budgetFetchError || !budgetData) {
+    console.error('Failed to fetch budget:', budgetFetchError);
+    throw new Error('Budget not found or you do not have permission to delete it');
+  }
+  
+  const categoryName = budgetData.category;
+  console.log(`Found budget with category: ${categoryName}`);
+  
   // Delete the budget
-  const { data, error } = await supabase
+  const { data: deletedBudget, error: budgetDeleteError } = await supabase
     .from('budgets')
     .delete()
     .eq('id', budgetId)
     .eq('user_id', user.id)
-    .select(); // Add select to see what was deleted
+    .select();
   
-  console.log('Delete operation result:', { data, error });
-  
-  if (error) {
-    console.error('Delete error:', error);
-    throw new Error(error.message);
+  if (budgetDeleteError) {
+    console.error('Budget delete error:', budgetDeleteError);
+    throw new Error(budgetDeleteError.message);
   }
   
-  if (!data || data.length === 0) {
-    console.warn('No rows were deleted - budget may not exist or belong to user');
-    throw new Error('Budget not found or you do not have permission to delete it');
+  console.log('Budget deleted successfully:', deletedBudget);
+  
+  // Now delete the associated category
+  console.log(`Attempting to delete associated category: ${categoryName}`);
+  const { data: deletedCategory, error: categoryDeleteError } = await supabase
+    .from('categories')
+    .delete()
+    .eq('name', categoryName)
+    .eq('user_id', user.id)
+    .select();
+  
+  if (categoryDeleteError) {
+    console.warn('Category delete error (continuing anyway):', categoryDeleteError);
+    // Don't throw here - budget was deleted successfully, category deletion is secondary
+  } else {
+    console.log('Associated category deleted successfully:', deletedCategory);
   }
   
-  console.log('Budget deleted successfully:', data);
-  return { success: true, deleted: data[0] };
+  return { 
+    success: true, 
+    deletedBudget: deletedBudget?.[0], 
+    deletedCategory: deletedCategory?.[0] 
+  };
 };
 
 // Budgets
@@ -344,6 +374,75 @@ export const cleanupDuplicateBudgets = async () => {
   } else {
     console.log('Successfully cleaned up duplicate budgets');
   }
+};
+
+// Clean up orphaned categories (categories without corresponding budgets)
+export const cleanupOrphanedCategories = async () => {
+  console.log('Starting cleanup of orphaned categories');
+  await setAuthToken();
+  
+  // Get current user
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  if (userError || !user) {
+    console.error('User authentication failed:', userError);
+    throw new Error('User not authenticated');
+  }
+  
+  console.log(`User authenticated: ${user.id}, finding orphaned categories`);
+  
+  // Get all categories for this user
+  const { data: categories, error: categoriesError } = await supabase
+    .from('categories')
+    .select('id, name')
+    .eq('user_id', user.id);
+  
+  if (categoriesError) {
+    console.error('Error fetching categories:', categoriesError);
+    throw new Error(categoriesError.message);
+  }
+  
+  // Get all budgets for this user  
+  const { data: budgets, error: budgetsError } = await supabase
+    .from('budgets')
+    .select('category')
+    .eq('user_id', user.id);
+  
+  if (budgetsError) {
+    console.error('Error fetching budgets:', budgetsError);
+    throw new Error(budgetsError.message);
+  }
+  
+  const budgetCategoryNames = new Set(budgets?.map(b => b.category) || []);
+  const orphanedCategories = categories?.filter(c => !budgetCategoryNames.has(c.name)) || [];
+  
+  console.log('Found categories:', categories?.length || 0);
+  console.log('Found budgets:', budgets?.length || 0);
+  console.log('Orphaned categories:', orphanedCategories);
+  
+  if (orphanedCategories.length === 0) {
+    console.log('No orphaned categories found');
+    return { cleanedUp: 0, categories: [] };
+  }
+  
+  // Delete orphaned categories
+  const orphanedIds = orphanedCategories.map(c => c.id);
+  const { data: deletedCategories, error: deleteError } = await supabase
+    .from('categories')
+    .delete()
+    .eq('user_id', user.id)
+    .in('id', orphanedIds)
+    .select();
+  
+  if (deleteError) {
+    console.error('Error deleting orphaned categories:', deleteError);
+    throw new Error(deleteError.message);
+  }
+  
+  console.log('Successfully cleaned up orphaned categories:', deletedCategories);
+  return { 
+    cleanedUp: deletedCategories?.length || 0, 
+    categories: deletedCategories || [] 
+  };
 };
 
 // Analytics

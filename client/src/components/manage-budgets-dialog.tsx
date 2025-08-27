@@ -21,6 +21,32 @@ function ManageBudgetsDialog({ open, onOpenChange }: ManageBudgetsDialogProps) {
   const queryClient = useQueryClient();
   const [addCategoryOpen, setAddCategoryOpen] = useState(false);
   const { toast } = useToast();
+  
+  const cleanupOrphanedCategories = useMutation({
+    mutationFn: async () => {
+      console.log('UI: Starting orphaned categories cleanup');
+      const result = await directApiRequest("POST", "/api/categories/cleanup", {});
+      console.log('UI: Cleanup result:', result);
+      return result;
+    },
+    onSuccess: (data) => {
+      console.log('UI: Cleanup successful:', data);
+      queryClient.invalidateQueries({ queryKey: ["/api/categories"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/budgets"] });
+      toast({
+        title: "Cleanup Complete",
+        description: `Removed ${data.cleanedUp} orphaned categories`,
+      });
+    },
+    onError: (error) => {
+      console.error('UI: Cleanup failed:', error);
+      toast({
+        title: "Cleanup Failed", 
+        description: error instanceof Error ? error.message : "Failed to cleanup categories",
+        variant: "destructive",
+      });
+    },
+  });
 
   useEffect(() => {
     if (budgets) {
@@ -63,7 +89,7 @@ function ManageBudgetsDialog({ open, onOpenChange }: ManageBudgetsDialogProps) {
       queryClient.invalidateQueries({ queryKey: ["/api/budgets"] });
       toast({
         title: "Success",
-        description: "Budget deleted successfully",
+        description: "Category and budget deleted successfully",
       });
     },
     onError: (error) => {
@@ -170,7 +196,7 @@ function ManageBudgetsDialog({ open, onOpenChange }: ManageBudgetsDialogProps) {
                   disabled={deleteBudget.isPending}
                   className="text-destructive hover:text-destructive hover:bg-destructive/10"
                   data-testid={`delete-${budget.category.toLowerCase().replace(/\s+/g, '-')}`}
-                  title="Delete budget"
+                  title="Delete category and budget"
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
@@ -180,13 +206,24 @@ function ManageBudgetsDialog({ open, onOpenChange }: ManageBudgetsDialogProps) {
 
           <div className="pt-4 border-t mt-4">
             <h3 className="mb-2 text-lg font-semibold">Add a custom budget</h3>
-            <Button
-              variant="outline"
-              onClick={() => setAddCategoryOpen(true)}
-              data-testid="button-add-category"
-            >
-              <Plus className="mr-2 h-4 w-4" /> Add Category
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setAddCategoryOpen(true)}
+                data-testid="button-add-category"
+              >
+                <Plus className="mr-2 h-4 w-4" /> Add Category
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => cleanupOrphanedCategories.mutate()}
+                disabled={cleanupOrphanedCategories.isPending}
+                className="text-xs"
+                title="Remove unused categories from database"
+              >
+                {cleanupOrphanedCategories.isPending ? "Cleaning..." : "Cleanup"}
+              </Button>
+            </div>
           </div>
         </div>
         <DialogFooter>
