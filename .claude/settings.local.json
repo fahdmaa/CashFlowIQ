@@ -1,0 +1,32 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run dev:*)",
+      "Bash(npm install)",
+      "Bash(git add:*)",
+      "Bash(git config:*)",
+      "Bash(npm install:*)",
+      "Bash(curl:*)",
+      "Bash(unzip:*)",
+      "Bash(chmod:*)",
+      "Bash(./pocketbase serve:*)",
+      "Bash(node:*)",
+      "Bash(./pocketbase:*)",
+      "Bash(git push:*)",
+      "Bash(npm run build:client:*)",
+      "Bash(npm run build:server:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm run check:*)",
+      "Bash(az version:*)",
+      "Bash(az account:*)",
+      "Bash(az login:*)",
+      "Bash(npm run azure:build:*)",
+      "Bash(npm run azure:start:*)",
+      "Bash(az vm list-skus:*)",
+      "Bash(vercel link:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
