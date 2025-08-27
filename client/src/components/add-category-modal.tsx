@@ -5,10 +5,13 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { directApiRequest } from "@/lib/direct-query-client";
+import { useToast } from "@/hooks/use-toast";
 import * as Icons from "lucide-react";
+import { useState } from "react";
 
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -28,19 +31,42 @@ interface AddCategoryModalProps {
 
 export default function AddCategoryModal({ open, onOpenChange }: AddCategoryModalProps) {
   const queryClient = useQueryClient();
-  const { register, handleSubmit, setValue, reset } = useForm<FormData>({
+  const { toast } = useToast();
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  
+  const { register, handleSubmit, setValue, reset, formState: { errors } } = useForm<FormData>({
+    resolver: zodResolver(formSchema),
     defaultValues: { type: "expense", color: "#000000", icon: "Utensils" },
   });
 
   const mutation = useMutation({
     mutationFn: async (data: FormData) => {
-      return await directApiRequest("POST", "/api/categories", data);
+      console.log('AddCategoryModal: Creating category with data:', data);
+      setErrorMessage(null);
+      const result = await directApiRequest("POST", "/api/categories", data);
+      console.log('AddCategoryModal: Category creation result:', result);
+      return result;
     },
     onSuccess: () => {
+      console.log('AddCategoryModal: Category creation successful');
       queryClient.invalidateQueries({ queryKey: ["/api/categories"] });
       queryClient.invalidateQueries({ queryKey: ["/api/budgets"] });
+      toast({
+        title: "Success",
+        description: "Category created successfully",
+      });
       reset();
       onOpenChange(false);
+    },
+    onError: (error: any) => {
+      console.error('AddCategoryModal: Category creation failed:', error);
+      const errorMsg = error.message || 'Failed to create category';
+      setErrorMessage(errorMsg);
+      toast({
+        title: "Error",
+        description: errorMsg,
+        variant: "destructive",
+      });
     },
   });
 
@@ -55,9 +81,18 @@ export default function AddCategoryModal({ open, onOpenChange }: AddCategoryModa
           <DialogTitle>Add Category</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          {errorMessage && (
+            <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-md">
+              <p className="text-sm text-destructive">{errorMessage}</p>
+            </div>
+          )}
+          
           <div>
             <Label htmlFor="name">Name</Label>
             <Input id="name" {...register("name")}/>
+            {errors.name && (
+              <p className="text-sm text-destructive mt-1">{errors.name.message}</p>
+            )}
           </div>
           <div>
             <Label>Type</Label>
@@ -73,10 +108,16 @@ export default function AddCategoryModal({ open, onOpenChange }: AddCategoryModa
                 </div>
               </div>
             </RadioGroup>
+            {errors.type && (
+              <p className="text-sm text-destructive mt-1">{errors.type.message}</p>
+            )}
           </div>
           <div>
             <Label htmlFor="color">Color</Label>
             <Input type="color" id="color" {...register("color")}/>
+            {errors.color && (
+              <p className="text-sm text-destructive mt-1">{errors.color.message}</p>
+            )}
           </div>
           <div>
             <Label>Icon</Label>
@@ -98,6 +139,9 @@ export default function AddCategoryModal({ open, onOpenChange }: AddCategoryModa
                 })}
               </SelectContent>
             </Select>
+            {errors.icon && (
+              <p className="text-sm text-destructive mt-1">{errors.icon.message}</p>
+            )}
           </div>
           <div className="flex space-x-2 pt-4">
             <Button type="button" variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>

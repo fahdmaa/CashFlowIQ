@@ -111,25 +111,42 @@ export const getCategories = async () => {
 };
 
 export const createCategory = async (category: any) => {
+  console.log('createCategory called with:', category);
   await setAuthToken();
   
   // Get current user
   const { data: { user }, error: userError } = await supabase.auth.getUser();
-  if (userError || !user) throw new Error('User not authenticated');
+  if (userError || !user) {
+    console.error('User authentication failed:', userError);
+    throw new Error('User not authenticated');
+  }
+  
+  console.log(`User authenticated: ${user.id}, creating category: ${category.name}`);
+  
+  const insertData = {
+    user_id: user.id,
+    name: category.name,
+    type: category.type,
+    color: category.color,
+    icon: category.icon
+  };
+  
+  console.log('Inserting category data:', insertData);
   
   const { data, error } = await supabase
     .from('categories')
-    .insert([{
-      user_id: user.id,
-      name: category.name,
-      type: category.type,
-      color: category.color,
-      icon: category.icon
-    }])
+    .insert([insertData])
     .select()
     .single();
   
-  if (error) throw new Error(error.message);
+  console.log('Category creation result:', { data, error });
+  
+  if (error) {
+    console.error('Category creation error:', error);
+    throw new Error(error.message);
+  }
+  
+  console.log('Category created successfully:', data);
   return data;
 };
 
