@@ -36,7 +36,7 @@ export default function AddCategoryModal({ open, onOpenChange }: AddCategoryModa
   
   const { register, handleSubmit, setValue, reset, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(formSchema),
-    defaultValues: { type: "expense", color: "#000000", icon: "Utensils" },
+    defaultValues: { type: "expense", color: "#3b82f6", icon: "Utensils" },
   });
 
   const mutation = useMutation({

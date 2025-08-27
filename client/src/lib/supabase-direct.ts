@@ -142,21 +142,50 @@ export const createCategory = async (category: any) => {
   
   console.log('Inserting category data:', insertData);
   
-  const { data, error } = await supabase
+  const { data: categoryData, error } = await supabase
     .from('categories')
     .insert([insertData])
     .select()
     .single();
   
-  console.log('Category creation result:', { data, error });
+  console.log('Category creation result:', { data: categoryData, error });
   
   if (error) {
     console.error('Category creation error:', error);
     throw new Error(error.message);
   }
   
-  console.log('Category created successfully:', data);
-  return data;
+  console.log('Category created successfully:', categoryData);
+  
+  // Only create budget for expense categories (income categories don't need budgets)
+  if (category.type === 'expense') {
+    console.log('Creating default budget for expense category:', category.name);
+    
+    try {
+      const budgetData = {
+        user_id: user.id,
+        category: category.name,
+        monthly_limit: 500, // Default budget limit
+        current_spent: 0
+      };
+      
+      const { data: budgetResult, error: budgetError } = await supabase
+        .from('budgets')
+        .insert([budgetData])
+        .select()
+        .single();
+      
+      if (budgetError) {
+        console.warn('Budget creation failed (continuing anyway):', budgetError);
+      } else {
+        console.log('Default budget created successfully:', budgetResult);
+      }
+    } catch (budgetErr) {
+      console.warn('Budget creation error (continuing anyway):', budgetErr);
+    }
+  }
+  
+  return categoryData;
 };
 
 export const deleteCategory = async (categoryId: string) => {
