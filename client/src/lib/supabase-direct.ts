@@ -91,6 +91,25 @@ export const createCategory = async (category: any) => {
   return data;
 };
 
+export const deleteCategory = async (categoryId: string) => {
+  setAuthToken();
+  
+  // Get current user
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  if (userError || !user) throw new Error('User not authenticated');
+  
+  // Delete the category (this will cascade delete related budgets due to database constraints)
+  const { error } = await supabase
+    .from('categories')
+    .delete()
+    .eq('id', categoryId)
+    .eq('user_id', user.id); // Extra security check
+  
+  if (error) throw new Error(error.message);
+  
+  return { success: true };
+};
+
 // Budgets
 export const getBudgets = async () => {
   setAuthToken();
