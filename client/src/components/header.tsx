@@ -2,7 +2,7 @@ import { Plus, User, Moon, Sun, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
-import { getCurrentUser, logout } from "@/lib/auth";
+import { getCurrentUser, logout } from "@/lib/supabase-auth";
 import {
   DropdownMenu,
   DropdownMenuContent,

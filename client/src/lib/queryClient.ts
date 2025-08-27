@@ -1,5 +1,5 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
-import { getAuthToken } from "./auth";
+import { getAuthToken } from "./supabase-auth";
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
