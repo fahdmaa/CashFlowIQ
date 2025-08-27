@@ -9,7 +9,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { insertTransactionSchema } from "@shared/schema";
 import { z } from "zod";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { directApiRequest } from "@/lib/direct-query-client";
 import { useToast } from "@/hooks/use-toast";
 import { categorizeTransaction } from "@/lib/categorization";
 import { useState, useEffect } from "react";
@@ -72,12 +72,11 @@ export default function AddTransactionModal({ isOpen, onClose }: AddTransactionM
 
   const createTransactionMutation = useMutation({
     mutationFn: async (data: TransactionForm) => {
-      const response = await apiRequest("POST", "/api/transactions", {
+      return await directApiRequest("POST", "/api/transactions", {
         ...data,
         amount: parseFloat(data.amount).toFixed(2),
         date: new Date(data.date).toISOString(),
       });
-      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });

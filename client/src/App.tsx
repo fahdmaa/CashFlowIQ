@@ -1,5 +1,5 @@
 import { Switch, Route } from "wouter";
-import { queryClient } from "./lib/supabase-query-client";
+import { queryClient } from "./lib/direct-query-client";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
