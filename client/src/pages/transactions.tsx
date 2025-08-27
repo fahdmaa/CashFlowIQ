@@ -22,11 +22,33 @@ export default function Transactions() {
   const [filterCategory, setFilterCategory] = useState("all");
   const [sortBy, setSortBy] = useState("date-desc");
   
+  // Month filter
+  const currentDate = new Date();
+  const currentMonth = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
+  const [selectedMonth, setSelectedMonth] = useState(currentMonth);
+  
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  
+  // Generate month options
+  const generateMonthOptions = () => {
+    const options = [];
+    const today = new Date();
+    
+    for (let i = 0; i < 12; i++) {
+      const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
+      const value = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      const label = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
+      options.push({ value, label });
+    }
+    
+    return options;
+  };
+  
+  const monthOptions = generateMonthOptions();
 
   const { data: transactions, isLoading: transactionsLoading } = useQuery<any[]>({
-    queryKey: ["/api/transactions"],
+    queryKey: ["/api/transactions", { selectedMonth }],
   });
   const { data: categories } = useQuery<any[]>({ queryKey: ["/api/categories"] });
 
@@ -237,6 +259,19 @@ export default function Transactions() {
                     className="pl-9 w-full md:w-64"
                   />
                 </div>
+                
+                <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                  <SelectTrigger className="w-full md:w-40">
+                    <SelectValue placeholder="Month" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {monthOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 
                 <Select value={filterType} onValueChange={setFilterType}>
                   <SelectTrigger className="w-full md:w-32">

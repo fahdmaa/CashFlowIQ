@@ -4,9 +4,13 @@ import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import * as Icons from "lucide-react";
 
-export default function RecentTransactions() {
+interface RecentTransactionsProps {
+  selectedMonth: string;
+}
+
+export default function RecentTransactions({ selectedMonth }: RecentTransactionsProps) {
   const { data: transactions, isLoading } = useQuery<any[]>({
-    queryKey: ["/api/transactions"],
+    queryKey: ["/api/transactions", { selectedMonth }],
   });
   const { data: categories } = useQuery<any[]>({ queryKey: ["/api/categories"] });
 

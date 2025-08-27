@@ -3,14 +3,18 @@ import { Wallet, TrendingUp, TrendingDown, Target } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 
-export default function FinancialOverview() {
+interface FinancialOverviewProps {
+  selectedMonth: string;
+}
+
+export default function FinancialOverview({ selectedMonth }: FinancialOverviewProps) {
   const { data: overview, isLoading } = useQuery<{
     currentBalance: number;
     monthlyIncome: number;
     monthlySpending: number;
     savingsProgress: number;
   }>({
-    queryKey: ["/api/analytics/overview"],
+    queryKey: ["/api/analytics/overview", { selectedMonth }],
   });
 
   if (isLoading) {

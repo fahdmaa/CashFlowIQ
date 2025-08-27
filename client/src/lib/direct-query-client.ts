@@ -8,21 +8,28 @@ const getDirectQueryFn: QueryFunction = async ({ queryKey }) => {
   try {
     switch (route) {
       case "/api/transactions":
-        return await getTransactions();
+        const transactionMonth = params?.selectedMonth;
+        console.log(`Query function: Calling getTransactions with month: ${transactionMonth}`);
+        return await getTransactions(transactionMonth);
       
       case "/api/categories":
         return await getCategories();
       
       case "/api/budgets":
-        return await getBudgets();
+        const budgetMonth = params?.selectedMonth;
+        console.log(`Query function: Calling getBudgets with month: ${budgetMonth}`);
+        return await getBudgets(budgetMonth);
       
       case "/api/analytics/overview":
-        return await getOverviewAnalytics();
+        const selectedMonth = params?.selectedMonth;
+        console.log(`Query function: Calling getOverviewAnalytics with month: ${selectedMonth}`);
+        return await getOverviewAnalytics(selectedMonth);
       
       case "/api/analytics/spending":
         const days = params?.days || 7;
-        console.log(`Query function: Calling getSpendingAnalytics with ${days} days`);
-        return await getSpendingAnalytics(days);
+        const spendingMonth = params?.selectedMonth;
+        console.log(`Query function: Calling getSpendingAnalytics with ${days} days, month: ${spendingMonth}`);
+        return await getSpendingAnalytics(days, spendingMonth);
       
       // Add more routes as needed
       default:

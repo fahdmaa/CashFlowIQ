@@ -5,11 +5,15 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
 import { useState } from "react";
 
-export default function SpendingAnalytics() {
+interface SpendingAnalyticsProps {
+  selectedMonth: string;
+}
+
+export default function SpendingAnalytics({ selectedMonth }: SpendingAnalyticsProps) {
   const [selectedPeriod, setSelectedPeriod] = useState(7);
 
   const { data: spendingData, isLoading } = useQuery({
-    queryKey: ["/api/analytics/spending", { days: selectedPeriod }],
+    queryKey: ["/api/analytics/spending", { days: selectedPeriod, selectedMonth }],
   });
 
   // Debug logging

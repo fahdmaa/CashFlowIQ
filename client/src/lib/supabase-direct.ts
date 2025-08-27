@@ -19,14 +19,30 @@ const setAuthToken = async () => {
 };
 
 // Transactions
-export const getTransactions = async () => {
+export const getTransactions = async (selectedMonth?: string) => {
   await setAuthToken();
-  const { data, error } = await supabase
+  
+  let query = supabase
     .from('transactions')
     .select('*')
     .order('date', { ascending: false });
   
+  // Filter by month if provided
+  if (selectedMonth) {
+    const [year, month] = selectedMonth.split('-').map(Number);
+    const startOfMonth = new Date(year, month - 1, 1).toISOString();
+    const endOfMonth = new Date(year, month, 0).toISOString();
+    
+    console.log(`Filtering transactions from ${startOfMonth} to ${endOfMonth}`);
+    query = query
+      .gte('date', startOfMonth)
+      .lte('date', endOfMonth);
+  }
+  
+  const { data, error } = await query;
+  
   if (error) throw new Error(error.message);
+  console.log(`Retrieved ${data?.length || 0} transactions for month: ${selectedMonth || 'all'}`);
   return data || [];
 };
 
@@ -394,29 +410,72 @@ export const deleteBudget = async (budgetId: string) => {
 };
 
 // Budgets
-export const getBudgets = async () => {
+export const getBudgets = async (selectedMonth?: string) => {
   await setAuthToken();
+  
+  // Get current user
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  if (userError || !user) throw new Error('User not authenticated');
+  
   const { data, error } = await supabase
     .from('budgets')
     .select('*')
+    .eq('user_id', user.id)
     .order('category');
   
   if (error) throw new Error(error.message);
   
   console.log('Raw budget data from database:', data);
   
-  // Transform snake_case to camelCase to match frontend expectations
+  // Calculate actual spending for the selected month (or current month if none selected)
+  let targetDate: Date;
+  if (selectedMonth) {
+    const [year, month] = selectedMonth.split('-').map(Number);
+    targetDate = new Date(year, month - 1, 1);
+  } else {
+    targetDate = new Date();
+  }
+  
+  const startOfMonth = new Date(targetDate.getFullYear(), targetDate.getMonth(), 1);
+  const endOfMonth = new Date(targetDate.getFullYear(), targetDate.getMonth() + 1, 0);
+  
+  console.log(`Calculating spending from ${startOfMonth.toISOString()} to ${endOfMonth.toISOString()}`);
+  
+  // Get transactions for the selected month
+  const { data: transactions, error: txError } = await supabase
+    .from('transactions')
+    .select('amount, category, type')
+    .eq('user_id', user.id)
+    .eq('type', 'expense')
+    .gte('date', startOfMonth.toISOString())
+    .lte('date', endOfMonth.toISOString());
+  
+  if (txError) {
+    console.warn('Error fetching transactions for budget calculation:', txError);
+  }
+  
+  // Calculate spending by category for the selected month
+  const spendingByCategory: Record<string, number> = {};
+  (transactions || []).forEach(tx => {
+    const category = tx.category;
+    const amount = parseFloat(tx.amount.toString());
+    spendingByCategory[category] = (spendingByCategory[category] || 0) + amount;
+  });
+  
+  console.log('Spending by category for selected month:', spendingByCategory);
+  
+  // Transform budget data with calculated spending
   const transformedData = (data || []).map(budget => ({
     id: budget.id,
     category: budget.category,
     monthlyLimit: budget.monthly_limit,
-    currentSpent: budget.current_spent,
+    currentSpent: spendingByCategory[budget.category] || 0, // Use calculated spending for selected month
     user_id: budget.user_id,
     created_at: budget.created_at,
     updated_at: budget.updated_at
   }));
   
-  console.log('Transformed budget data:', transformedData);
+  console.log('Transformed budget data with monthly spending:', transformedData);
   return transformedData;
 };
 
@@ -603,12 +662,20 @@ export const cleanupOrphanedCategories = async () => {
 };
 
 // Analytics
-export const getOverviewAnalytics = async () => {
+export const getOverviewAnalytics = async (selectedMonth?: string) => {
   await setAuthToken();
   
-  const currentMonth = new Date();
-  const startOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
-  const endOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
+  let targetDate: Date;
+  if (selectedMonth) {
+    // Parse selectedMonth in format "YYYY-MM"
+    const [year, month] = selectedMonth.split('-').map(Number);
+    targetDate = new Date(year, month - 1, 1); // month - 1 because Date uses 0-based months
+  } else {
+    targetDate = new Date(); // Use current month as default
+  }
+  
+  const startOfMonth = new Date(targetDate.getFullYear(), targetDate.getMonth(), 1);
+  const endOfMonth = new Date(targetDate.getFullYear(), targetDate.getMonth() + 1, 0);
   
   const { data: transactions, error } = await supabase
     .from('transactions')
@@ -646,8 +713,8 @@ export const getOverviewAnalytics = async () => {
 };
 
 // Get spending analytics for chart (daily spending over specified period)
-export const getSpendingAnalytics = async (days: number = 7) => {
-  console.log(`getSpendingAnalytics called for ${days} days`);
+export const getSpendingAnalytics = async (days: number = 7, selectedMonth?: string) => {
+  console.log(`getSpendingAnalytics called for ${days} days, month: ${selectedMonth}`);
   await setAuthToken();
   
   // Get current user
@@ -657,9 +724,30 @@ export const getSpendingAnalytics = async (days: number = 7) => {
     throw new Error('User not authenticated');
   }
   
-  const endDate = new Date();
-  const startDate = new Date();
-  startDate.setDate(endDate.getDate() - days);
+  let endDate: Date;
+  let startDate: Date;
+  
+  if (selectedMonth) {
+    // Parse selectedMonth in format "YYYY-MM" and get spending for that specific month
+    const [year, month] = selectedMonth.split('-').map(Number);
+    startDate = new Date(year, month - 1, 1); // First day of the month
+    endDate = new Date(year, month, 0); // Last day of the month
+    
+    // For monthly view, we still want to show the specified period within that month
+    // But if the period is longer than the month, just show the whole month
+    const monthDays = endDate.getDate();
+    if (days > monthDays) {
+      // Keep the whole month
+    } else {
+      // Show last 'days' of the month
+      startDate = new Date(year, month - 1, Math.max(1, monthDays - days + 1));
+    }
+  } else {
+    // Default behavior - last N days from today
+    endDate = new Date();
+    startDate = new Date();
+    startDate.setDate(endDate.getDate() - days);
+  }
   
   console.log(`Fetching spending data from ${startDate.toISOString()} to ${endDate.toISOString()}`);
   

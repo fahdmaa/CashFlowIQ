@@ -8,9 +8,13 @@ import * as Icons from "lucide-react";
 import { useState } from "react";
 import ManageBudgetsDialog from "@/components/manage-budgets-dialog";
 
-export default function BudgetTracking() {
+interface BudgetTrackingProps {
+  selectedMonth: string;
+}
+
+export default function BudgetTracking({ selectedMonth }: BudgetTrackingProps) {
   const { data: budgets, isLoading } = useQuery<any[]>({
-    queryKey: ["/api/budgets"],
+    queryKey: ["/api/budgets", { selectedMonth }],
   });
   const { data: categories } = useQuery<any[]>({ queryKey: ["/api/categories"] });
   const [open, setOpen] = useState(false);
