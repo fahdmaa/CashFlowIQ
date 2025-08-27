@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { getCurrentUser, logout } from "@/lib/supabase-auth";
+import Logo from "@/components/logo";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -52,14 +53,11 @@ export default function Header({ onAddTransaction }: HeaderProps) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center space-x-8">
-            <div className="flex items-center space-x-3 animate-fadeIn">
-              <img 
-                src="/budgetwise-logo.png" 
-                alt="BudgetWise Logo" 
-                className="w-10 h-10 object-contain transition-transform hover:scale-110"
-              />
-              <h1 className="text-2xl font-bold text-foreground">BudgetWise</h1>
-            </div>
+            <Logo 
+              size="lg" 
+              showText={true} 
+              className="animate-fadeIn"
+            />
             <nav className="hidden md:flex space-x-8">
               <Link 
                 href="/" 

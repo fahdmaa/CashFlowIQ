@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { login, signUp } from "@/lib/supabase-auth";
+import Logo from "@/components/logo";
 
 export default function SupabaseLogin() {
   const [, navigate] = useLocation();
@@ -96,7 +97,10 @@ export default function SupabaseLogin() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
+        <CardHeader className="space-y-4">
+          <div className="flex justify-center">
+            <Logo size="xl" alt="CashFlowIQ Logo" />
+          </div>
           <CardTitle className="text-2xl text-center">Welcome to CashFlowIQ</CardTitle>
           <CardDescription className="text-center">
             Sign in to your account or create a new one
@@ -142,17 +146,6 @@ export default function SupabaseLogin() {
                 <Button type="submit" className="w-full" disabled={isLoginLoading}>
                   {isLoginLoading ? "Signing in..." : "Sign in"}
                 </Button>
-                
-                {/* Demo accounts info */}
-                <div className="mt-4 p-3 bg-blue-50 rounded-md">
-                  <p className="text-sm text-blue-800 font-medium">Demo Accounts:</p>
-                  <p className="text-xs text-blue-700 mt-1">
-                    Email: fahdmaa@example.com | Password: fahdmaa123
-                  </p>
-                  <p className="text-xs text-blue-700">
-                    Email: farahfa@example.com | Password: farahfa123
-                  </p>
-                </div>
               </form>
             </TabsContent>
             
