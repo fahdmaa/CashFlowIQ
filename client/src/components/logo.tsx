@@ -47,7 +47,7 @@ export default function Logo({
     return () => observer.disconnect();
   }, []);
 
-  const logoSrc = isDark ? "/logo-light.png" : "/logo-dark.png";
+  const logoSrc = isDark ? "/white logo" : "/dark logo";
   const baseClasses = `${sizeClasses[size]} object-contain transition-all duration-200`;
 
   if (showText) {
