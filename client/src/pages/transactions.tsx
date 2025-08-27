@@ -3,13 +3,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import * as Icons from "lucide-react";
-import { Search, Calendar, Filter, Download, Plus, TrendingUp, TrendingDown, Edit } from "lucide-react";
+import { Search, Calendar, Filter, Download, Plus, TrendingUp, TrendingDown, Edit, Trash2 } from "lucide-react";
 import AddTransactionModal from "@/components/add-transaction-modal";
 import EditTransactionModal from "@/components/edit-transaction-modal";
 import Header from "@/components/header";
+import { directApiRequest } from "@/lib/direct-query-client";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Transactions() {
   const [isAddTransactionOpen, setIsAddTransactionOpen] = useState(false);
@@ -19,6 +21,9 @@ export default function Transactions() {
   const [filterType, setFilterType] = useState("all");
   const [filterCategory, setFilterCategory] = useState("all");
   const [sortBy, setSortBy] = useState("date-desc");
+  
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const { data: transactions, isLoading: transactionsLoading } = useQuery<any[]>({
     queryKey: ["/api/transactions"],
@@ -94,6 +99,37 @@ export default function Transactions() {
   const handleCloseEditModal = () => {
     setIsEditTransactionOpen(false);
     setEditingTransaction(null);
+  };
+
+  // Delete transaction mutation
+  const deleteTransactionMutation = useMutation({
+    mutationFn: async (transactionId: string) => {
+      console.log('Deleting transaction:', transactionId);
+      return await directApiRequest("DELETE", "/api/transactions", { transactionId });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/budgets"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/analytics/overview"] });
+      toast({
+        title: "Success",
+        description: "Transaction deleted successfully",
+      });
+    },
+    onError: (error: any) => {
+      console.error('Delete transaction failed:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete transaction",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleDeleteTransaction = (transaction: any) => {
+    if (window.confirm(`Are you sure you want to delete this transaction: "${transaction.description}"?`)) {
+      deleteTransactionMutation.mutate(transaction.id);
+    }
   };
 
   if (transactionsLoading) {
@@ -314,15 +350,27 @@ export default function Transactions() {
                             {transaction.type === "income" ? "+" : "-"}{formatCurrency(transaction.amount)}
                           </td>
                           <td className="p-3 text-center">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleEditTransaction(transaction)}
-                              className="h-8 w-8 text-muted-foreground hover:text-foreground transition-colors"
-                              title="Edit transaction"
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
+                            <div className="flex items-center justify-center space-x-1">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleEditTransaction(transaction)}
+                                className="h-8 w-8 text-muted-foreground hover:text-foreground transition-colors"
+                                title="Edit transaction"
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleDeleteTransaction(transaction)}
+                                disabled={deleteTransactionMutation.isPending}
+                                className="h-8 w-8 text-muted-foreground hover:text-destructive transition-colors"
+                                title="Delete transaction"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
                           </td>
                         </tr>
                       );

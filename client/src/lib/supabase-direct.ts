@@ -98,6 +98,43 @@ export const updateTransaction = async (transactionId: string, transaction: any)
   return data;
 };
 
+export const deleteTransaction = async (transactionId: string) => {
+  console.log(`deleteTransaction called with ID: ${transactionId}`);
+  await setAuthToken();
+  
+  // Get current user
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  if (userError || !user) {
+    console.error('User authentication failed:', userError);
+    throw new Error('User not authenticated');
+  }
+  
+  console.log(`User authenticated: ${user.id}, deleting transaction: ${transactionId}`);
+  
+  // Delete the transaction
+  const { data, error } = await supabase
+    .from('transactions')
+    .delete()
+    .eq('id', transactionId)
+    .eq('user_id', user.id)
+    .select();
+  
+  console.log('Delete transaction result:', { data, error });
+  
+  if (error) {
+    console.error('Delete error:', error);
+    throw new Error(error.message);
+  }
+  
+  if (!data || data.length === 0) {
+    console.warn('No transaction was deleted - may not exist or belong to user');
+    throw new Error('Transaction not found or you do not have permission to delete it');
+  }
+  
+  console.log('Transaction deleted successfully:', data);
+  return { success: true, deleted: data[0] };
+};
+
 // Categories
 export const getCategories = async () => {
   console.log('getCategories: Fetching categories from database...');
@@ -205,6 +242,88 @@ export const deleteCategory = async (categoryId: string) => {
   if (error) throw new Error(error.message);
   
   return { success: true };
+};
+
+// Update category name
+export const updateCategory = async (categoryId: string, newName: string) => {
+  console.log(`updateCategory called with categoryId: ${categoryId}, newName: ${newName}`);
+  await setAuthToken();
+  
+  // Get current user
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  if (userError || !user) {
+    console.error('User authentication failed:', userError);
+    throw new Error('User not authenticated');
+  }
+  
+  console.log(`User authenticated: ${user.id}, updating category: ${categoryId} to ${newName}`);
+  
+  // First, get the current category to know the old name
+  const { data: currentCategory, error: fetchError } = await supabase
+    .from('categories')
+    .select('name')
+    .eq('id', categoryId)
+    .eq('user_id', user.id)
+    .single();
+  
+  if (fetchError || !currentCategory) {
+    console.error('Error fetching current category:', fetchError);
+    throw new Error('Category not found or you do not have permission to edit it');
+  }
+  
+  const oldName = currentCategory.name;
+  console.log(`Current category name: ${oldName}, changing to: ${newName}`);
+  
+  // Update the category name
+  const { data: updatedCategory, error: updateError } = await supabase
+    .from('categories')
+    .update({ name: newName })
+    .eq('id', categoryId)
+    .eq('user_id', user.id)
+    .select()
+    .single();
+  
+  if (updateError) {
+    console.error('Category update error:', updateError);
+    throw new Error(updateError.message);
+  }
+  
+  console.log('Category updated successfully:', updatedCategory);
+  
+  // Update all budgets that reference this category
+  const { error: budgetUpdateError } = await supabase
+    .from('budgets')
+    .update({ category: newName })
+    .eq('category', oldName)
+    .eq('user_id', user.id);
+  
+  if (budgetUpdateError) {
+    console.warn('Budget update error (continuing anyway):', budgetUpdateError);
+    // Don't throw here - category was updated successfully
+  } else {
+    console.log('Associated budgets updated successfully');
+  }
+  
+  // Update all transactions that reference this category
+  const { error: transactionUpdateError } = await supabase
+    .from('transactions')
+    .update({ category: newName })
+    .eq('category', oldName)
+    .eq('user_id', user.id);
+  
+  if (transactionUpdateError) {
+    console.warn('Transaction update error (continuing anyway):', transactionUpdateError);
+    // Don't throw here - category was updated successfully
+  } else {
+    console.log('Associated transactions updated successfully');
+  }
+  
+  return { 
+    success: true, 
+    updated: updatedCategory,
+    oldName,
+    newName 
+  };
 };
 
 export const deleteBudget = async (budgetId: string) => {
@@ -493,7 +612,7 @@ export const getOverviewAnalytics = async () => {
   
   const { data: transactions, error } = await supabase
     .from('transactions')
-    .select('amount, type')
+    .select('amount, type, category')
     .gte('date', startOfMonth.toISOString())
     .lte('date', endOfMonth.toISOString());
 
@@ -509,15 +628,19 @@ export const getOverviewAnalytics = async () => {
 
   const currentBalance = monthlyIncome - monthlySpending;
   
-  // Calculate savings goal progress (assuming goal is to save 20% of income)
-  const savingsGoal = monthlyIncome * 0.2;
-  const actualSavings = monthlyIncome - monthlySpending;
-  const savingsProgress = savingsGoal > 0 ? Math.min((actualSavings / savingsGoal) * 100, 100) : 0;
+  // Calculate savings based on "savings" category sum
+  const savingsAmount = (transactions || [])
+    .filter(t => t.category && t.category.toLowerCase() === "savings")
+    .reduce((sum, t) => sum + parseFloat(t.amount.toString()), 0);
+  
+  // Use savings amount directly as percentage (or show actual amount)
+  // For now, let's show actual savings amount as the "progress"
+  const savingsProgress = savingsAmount;
 
   return {
     currentBalance,
     monthlyIncome,
     monthlySpending,
-    savingsProgress: Math.round(savingsProgress)
+    savingsProgress: Math.round(savingsProgress * 100) / 100 // Round to 2 decimal places
   };
 };

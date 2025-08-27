@@ -1,7 +1,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ChevronUp, ChevronDown, Plus, Trash2 } from "lucide-react";
+import { ChevronUp, ChevronDown, Plus, Trash2, Edit, Check, X } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import AddCategoryModal from "./add-category-modal";
@@ -20,6 +20,8 @@ function ManageBudgetsDialog({ open, onOpenChange }: ManageBudgetsDialogProps) {
   const [isSaving, setIsSaving] = useState(false);
   const queryClient = useQueryClient();
   const [addCategoryOpen, setAddCategoryOpen] = useState(false);
+  const [editingBudgetId, setEditingBudgetId] = useState<string | null>(null);
+  const [editingCategoryName, setEditingCategoryName] = useState<string>("");
   const { toast } = useToast();
   
   const cleanupOrphanedCategories = useMutation({
@@ -102,6 +104,35 @@ function ManageBudgetsDialog({ open, onOpenChange }: ManageBudgetsDialogProps) {
     }
   });
 
+  const updateCategoryMutation = useMutation({
+    mutationFn: async ({ categoryId, newName }: { categoryId: string; newName: string }) => {
+      console.log(`UI: Starting category name update for ID: ${categoryId} to ${newName}`);
+      const result = await directApiRequest("PUT", "/api/categories", { categoryId, newName });
+      console.log(`UI: Update result:`, result);
+      return result;
+    },
+    onSuccess: (data) => {
+      console.log('UI: Category update succeeded:', data);
+      queryClient.invalidateQueries({ queryKey: ["/api/categories"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/budgets"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/transactions"] }); // Refresh transactions as they may reference this category
+      setEditingBudgetId(null);
+      setEditingCategoryName("");
+      toast({
+        title: "Success",
+        description: `Category renamed from "${data.oldName}" to "${data.newName}"`,
+      });
+    },
+    onError: (error) => {
+      console.error(`UI: Failed to update category:`, error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to update category name",
+        variant: "destructive",
+      });
+    }
+  });
+
   const handleSave = async () => {
     if (isSaving) return; // Prevent double-clicking
     
@@ -151,6 +182,36 @@ function ManageBudgetsDialog({ open, onOpenChange }: ManageBudgetsDialogProps) {
     }));
   };
 
+  const startEditingCategoryName = (budget: any) => {
+    const category = categories?.find(c => c.name === budget.category);
+    if (category) {
+      setEditingBudgetId(budget.id);
+      setEditingCategoryName(budget.category);
+    }
+  };
+
+  const cancelEditingCategoryName = () => {
+    setEditingBudgetId(null);
+    setEditingCategoryName("");
+  };
+
+  const saveEditingCategoryName = () => {
+    if (!editingCategoryName.trim() || editingBudgetId === null) return;
+    
+    const budget = budgets?.find(b => b.id === editingBudgetId);
+    const category = categories?.find(c => c.name === budget?.category);
+    
+    if (category && editingCategoryName.trim() !== category.name) {
+      updateCategoryMutation.mutate({
+        categoryId: category.id,
+        newName: editingCategoryName.trim()
+      });
+    } else {
+      // No change, just cancel
+      cancelEditingCategoryName();
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
@@ -160,7 +221,61 @@ function ManageBudgetsDialog({ open, onOpenChange }: ManageBudgetsDialogProps) {
         <div className="space-y-4">
           {budgets?.map((budget) => (
             <div key={budget.id} className="flex items-center justify-between">
-              <span className="flex-1">{budget.category}</span>
+              <div className="flex items-center space-x-2 flex-1">
+                {editingBudgetId === budget.id ? (
+                  <div className="flex items-center space-x-1 flex-1">
+                    <Input
+                      value={editingCategoryName}
+                      onChange={(e) => setEditingCategoryName(e.target.value)}
+                      className="flex-1"
+                      placeholder="Category name"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          saveEditingCategoryName();
+                        } else if (e.key === 'Escape') {
+                          e.preventDefault();
+                          cancelEditingCategoryName();
+                        }
+                      }}
+                      autoFocus
+                    />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={saveEditingCategoryName}
+                      disabled={updateCategoryMutation.isPending}
+                      className="h-8 w-8 text-secondary hover:text-secondary hover:bg-secondary/10"
+                      title="Save changes"
+                    >
+                      <Check className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={cancelEditingCategoryName}
+                      disabled={updateCategoryMutation.isPending}
+                      className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                      title="Cancel"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex items-center space-x-2 flex-1">
+                    <span className="flex-1">{budget.category}</span>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => startEditingCategoryName(budget)}
+                      className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                      title="Edit category name"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+              </div>
               <div className="flex items-center space-x-2">
                 <Button
                   variant="outline"

@@ -112,20 +112,19 @@ export default function FinancialOverview() {
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Savings Goal</p>
+              <p className="text-sm font-medium text-muted-foreground">Total Savings</p>
               <p className="text-2xl font-bold text-foreground" data-testid="text-savings-progress">
-                {overview?.savingsProgress || 0}%
+                {formatCurrency(overview?.savingsProgress || 0)}
               </p>
             </div>
             <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center transition-transform hover:scale-110">
               <Target className="text-primary h-6 w-6" />
             </div>
           </div>
-          <div className="w-full bg-muted rounded-full h-2 mt-4">
-            <div
-              className="bg-primary h-2 rounded-full transition-all duration-500 animate-pulse"
-              style={{ width: `${Math.min(overview?.savingsProgress || 0, 100)}%` }}
-            />
+          <div className="flex items-center mt-4">
+            <span className="text-sm text-primary font-medium">
+              From savings category
+            </span>
           </div>
         </CardContent>
       </Card>
