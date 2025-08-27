@@ -7,9 +7,9 @@ import { AuthenticatedRequest } from "./types";
 import { createClient } from '@supabase/supabase-js';
 
 // Initialize Supabase client and storage
-const supabaseUrl = process.env.SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY!;
+const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL!;
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY!;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || supabaseAnonKey; // Fallback to anon key
 
 const supabaseAuth = createClient(supabaseUrl, supabaseAnonKey);
 const storage = new SupabaseStorage(supabaseUrl, supabaseServiceKey);
