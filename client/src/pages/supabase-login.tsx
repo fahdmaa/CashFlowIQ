@@ -23,7 +23,9 @@ export default function SupabaseLogin() {
   const [signupUsername, setSignupUsername] = useState("");
   const [signupError, setSignupError] = useState("");
   const [isSignupLoading, setIsSignupLoading] = useState(false);
-  const [signupSuccess, setSignupSuccess] = useState(false);
+  
+  // Authentication success state
+  const [showAuthSuccess, setShowAuthSuccess] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,10 +34,16 @@ export default function SupabaseLogin() {
 
     try {
       await login(loginEmail, loginPassword);
-      navigate("/");
+      
+      // Show authentication success animation
+      setShowAuthSuccess(true);
+      
+      // Navigate after a brief delay to show the success animation
+      setTimeout(() => {
+        navigate("/");
+      }, 1200);
     } catch (err) {
       setLoginError(err instanceof Error ? err.message : "Login failed");
-    } finally {
       setIsLoginLoading(false);
     }
   };
@@ -47,30 +55,43 @@ export default function SupabaseLogin() {
 
     try {
       await signUp(signupEmail, signupPassword, signupUsername);
-      setSignupSuccess(true);
-      // Auto-navigate after successful signup
-      setTimeout(() => navigate("/"), 1500);
+      
+      // Show authentication success animation for signup too
+      setShowAuthSuccess(true);
+      
+      // Navigate after showing success animation
+      setTimeout(() => navigate("/"), 1200);
     } catch (err) {
       setSignupError(err instanceof Error ? err.message : "Signup failed");
-    } finally {
       setIsSignupLoading(false);
     }
   };
 
-  if (signupSuccess) {
+  // Show authentication success animation
+  if (showAuthSuccess) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <Card className="w-full max-w-md">
+        <Card className="w-full max-w-md transform transition-all duration-500 ease-in-out scale-105">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl text-center text-green-600">Welcome!</CardTitle>
-            <CardDescription className="text-center">
-              Your account has been created successfully. Redirecting to dashboard...
+            <div className="flex justify-center mb-4">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center animate-pulse">
+                <svg className="w-8 h-8 text-green-600 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+            </div>
+            <CardTitle className="text-2xl text-center text-green-600 animate-fade-in">
+              Authenticated Successfully!
+            </CardTitle>
+            <CardDescription className="text-center animate-fade-in-delayed">
+              Welcome back! Redirecting to your dashboard...
             </CardDescription>
           </CardHeader>
         </Card>
       </div>
     );
   }
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
