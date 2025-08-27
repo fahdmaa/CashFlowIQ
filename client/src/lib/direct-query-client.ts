@@ -1,5 +1,5 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
-import { getTransactions, createTransaction, getCategories, getOverviewAnalytics } from "./supabase-direct";
+import { getTransactions, createTransaction, getCategories, createCategory, getOverviewAnalytics, getBudgets, createBudget, updateBudget } from "./supabase-direct";
 
 // Direct Supabase query function
 const getDirectQueryFn: QueryFunction = async ({ queryKey }) => {
@@ -12,6 +12,9 @@ const getDirectQueryFn: QueryFunction = async ({ queryKey }) => {
       
       case "/api/categories":
         return await getCategories();
+      
+      case "/api/budgets":
+        return await getBudgets();
       
       case "/api/analytics/overview":
         return await getOverviewAnalytics();
@@ -39,6 +42,19 @@ export async function directApiRequest(
   
   if (method === 'POST' && url === '/api/transactions') {
     return await createTransaction(data);
+  }
+  
+  if (method === 'POST' && url === '/api/categories') {
+    return await createCategory(data);
+  }
+  
+  if (method === 'POST' && url === '/api/budgets') {
+    return await createBudget(data);
+  }
+  
+  if (method === 'PUT' && url.startsWith('/api/budgets/')) {
+    const category = url.split('/').pop(); // Extract category from URL
+    return await updateBudget(category!, (data as any).monthlyLimit);
   }
   
   // Add more mutation handlers as needed

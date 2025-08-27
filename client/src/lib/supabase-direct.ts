@@ -68,6 +68,82 @@ export const getCategories = async () => {
   return data || [];
 };
 
+export const createCategory = async (category: any) => {
+  setAuthToken();
+  
+  // Get current user
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  if (userError || !user) throw new Error('User not authenticated');
+  
+  const { data, error } = await supabase
+    .from('categories')
+    .insert([{
+      user_id: user.id,
+      name: category.name,
+      type: category.type,
+      color: category.color,
+      icon: category.icon
+    }])
+    .select()
+    .single();
+  
+  if (error) throw new Error(error.message);
+  return data;
+};
+
+// Budgets
+export const getBudgets = async () => {
+  setAuthToken();
+  const { data, error } = await supabase
+    .from('budgets')
+    .select('*')
+    .order('category');
+  
+  if (error) throw new Error(error.message);
+  return data || [];
+};
+
+export const createBudget = async (budget: any) => {
+  setAuthToken();
+  
+  // Get current user
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  if (userError || !user) throw new Error('User not authenticated');
+  
+  const { data, error } = await supabase
+    .from('budgets')
+    .insert([{
+      user_id: user.id,
+      category: budget.category,
+      monthly_limit: parseFloat(budget.monthlyLimit),
+      current_spent: 0
+    }])
+    .select()
+    .single();
+  
+  if (error) throw new Error(error.message);
+  return data;
+};
+
+export const updateBudget = async (category: string, monthlyLimit: number) => {
+  setAuthToken();
+  
+  // Get current user
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  if (userError || !user) throw new Error('User not authenticated');
+  
+  const { data, error } = await supabase
+    .from('budgets')
+    .update({ monthly_limit: monthlyLimit })
+    .eq('user_id', user.id)
+    .eq('category', category)
+    .select()
+    .single();
+  
+  if (error) throw new Error(error.message);
+  return data;
+};
+
 // Analytics
 export const getOverviewAnalytics = async () => {
   setAuthToken();

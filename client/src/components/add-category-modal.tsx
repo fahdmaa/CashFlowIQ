@@ -7,7 +7,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { directApiRequest } from "@/lib/direct-query-client";
 import * as Icons from "lucide-react";
 
 const formSchema = z.object({
@@ -34,8 +34,7 @@ export default function AddCategoryModal({ open, onOpenChange }: AddCategoryModa
 
   const mutation = useMutation({
     mutationFn: async (data: FormData) => {
-      const res = await apiRequest("POST", "/api/categories", data);
-      return res.json();
+      return await directApiRequest("POST", "/api/categories", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/categories"] });

@@ -5,6 +5,7 @@ import { ChevronUp, ChevronDown, Plus } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import AddCategoryModal from "./add-category-modal";
+import { directApiRequest } from "@/lib/direct-query-client";
 
 interface ManageBudgetsDialogProps {
   open: boolean;
@@ -29,13 +30,9 @@ function ManageBudgetsDialog({ open, onOpenChange }: ManageBudgetsDialogProps) {
 
   const updateBudget = useMutation({
     mutationFn: async ({ category, monthlyLimit }: { category: string; monthlyLimit: string }) => {
-      const res = await fetch(`/api/budgets/${encodeURIComponent(category)}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ monthlyLimit }),
+      return await directApiRequest("PUT", `/api/budgets/${encodeURIComponent(category)}`, { 
+        monthlyLimit: parseFloat(monthlyLimit) 
       });
-      if (!res.ok) throw new Error("Failed to update budget");
-      return res.json();
     },
   });
 
