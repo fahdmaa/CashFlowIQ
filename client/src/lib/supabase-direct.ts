@@ -111,22 +111,40 @@ export const deleteCategory = async (categoryId: string) => {
 };
 
 export const deleteBudget = async (budgetId: string) => {
+  console.log(`deleteBudget called with budgetId: ${budgetId}`);
   setAuthToken();
   
   // Get current user
   const { data: { user }, error: userError } = await supabase.auth.getUser();
-  if (userError || !user) throw new Error('User not authenticated');
+  if (userError || !user) {
+    console.error('User authentication failed:', userError);
+    throw new Error('User not authenticated');
+  }
+  
+  console.log(`User authenticated: ${user.id}, attempting to delete budget: ${budgetId}`);
   
   // Delete the budget
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('budgets')
     .delete()
     .eq('id', budgetId)
-    .eq('user_id', user.id); // Extra security check
+    .eq('user_id', user.id)
+    .select(); // Add select to see what was deleted
   
-  if (error) throw new Error(error.message);
+  console.log('Delete operation result:', { data, error });
   
-  return { success: true };
+  if (error) {
+    console.error('Delete error:', error);
+    throw new Error(error.message);
+  }
+  
+  if (!data || data.length === 0) {
+    console.warn('No rows were deleted - budget may not exist or belong to user');
+    throw new Error('Budget not found or you do not have permission to delete it');
+  }
+  
+  console.log('Budget deleted successfully:', data);
+  return { success: true, deleted: data[0] };
 };
 
 // Budgets
@@ -139,8 +157,10 @@ export const getBudgets = async () => {
   
   if (error) throw new Error(error.message);
   
+  console.log('Raw budget data from database:', data);
+  
   // Transform snake_case to camelCase to match frontend expectations
-  return (data || []).map(budget => ({
+  const transformedData = (data || []).map(budget => ({
     id: budget.id,
     category: budget.category,
     monthlyLimit: budget.monthly_limit,
@@ -149,6 +169,9 @@ export const getBudgets = async () => {
     created_at: budget.created_at,
     updated_at: budget.updated_at
   }));
+  
+  console.log('Transformed budget data:', transformedData);
+  return transformedData;
 };
 
 export const createBudget = async (budget: any) => {

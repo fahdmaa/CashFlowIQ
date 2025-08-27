@@ -24,8 +24,10 @@ function ManageBudgetsDialog({ open, onOpenChange }: ManageBudgetsDialogProps) {
 
   useEffect(() => {
     if (budgets) {
+      console.log('UI: Budgets data received:', budgets);
       const initial: Record<string, string> = {};
       budgets.forEach((b) => {
+        console.log(`UI: Processing budget - ID: ${b.id}, Category: ${b.category}, Limit: ${b.monthlyLimit}`);
         initial[b.category] = b.monthlyLimit;
       });
       setValues(initial);
@@ -50,12 +52,14 @@ function ManageBudgetsDialog({ open, onOpenChange }: ManageBudgetsDialogProps) {
 
   const deleteBudget = useMutation({
     mutationFn: async (budgetId: string) => {
-      console.log(`Deleting budget with ID: ${budgetId}`);
+      console.log(`UI: Starting budget deletion for ID: ${budgetId}`);
+      console.log(`UI: Budget ID type: ${typeof budgetId}`);
       const result = await directApiRequest("DELETE", "/api/budgets", { budgetId });
-      console.log(`Delete result:`, result);
+      console.log(`UI: Delete result:`, result);
       return result;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('UI: Delete mutation succeeded:', data);
       queryClient.invalidateQueries({ queryKey: ["/api/budgets"] });
       toast({
         title: "Success",
@@ -63,7 +67,7 @@ function ManageBudgetsDialog({ open, onOpenChange }: ManageBudgetsDialogProps) {
       });
     },
     onError: (error) => {
-      console.error(`Failed to delete budget:`, error);
+      console.error(`UI: Failed to delete budget:`, error);
       toast({
         title: "Error",
         description: error instanceof Error ? error.message : "Failed to delete budget",
@@ -158,7 +162,11 @@ function ManageBudgetsDialog({ open, onOpenChange }: ManageBudgetsDialogProps) {
                 <Button
                   variant="outline"
                   size="icon"
-                  onClick={() => deleteBudget.mutate(budget.id)}
+                  onClick={() => {
+                    console.log(`UI: Delete button clicked for budget:`, budget);
+                    console.log(`UI: About to call deleteBudget.mutate with ID: ${budget.id}`);
+                    deleteBudget.mutate(budget.id);
+                  }}
                   disabled={deleteBudget.isPending}
                   className="text-destructive hover:text-destructive hover:bg-destructive/10"
                   data-testid={`delete-${budget.category.toLowerCase().replace(/\s+/g, '-')}`}
