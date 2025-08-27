@@ -1,5 +1,5 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
-import { getTransactions, createTransaction, getCategories, createCategory, deleteCategory, deleteBudget, getOverviewAnalytics, getBudgets, createBudget, updateBudget, cleanupDuplicateBudgets } from "./supabase-direct";
+import { getTransactions, createTransaction, updateTransaction, getCategories, createCategory, deleteCategory, deleteBudget, getOverviewAnalytics, getBudgets, createBudget, updateBudget, cleanupDuplicateBudgets } from "./supabase-direct";
 
 // Direct Supabase query function
 const getDirectQueryFn: QueryFunction = async ({ queryKey }) => {
@@ -42,6 +42,12 @@ export async function directApiRequest(
   
   if (method === 'POST' && url === '/api/transactions') {
     return await createTransaction(data);
+  }
+  
+  if (method === 'PUT' && url === '/api/transactions') {
+    const { transactionId, ...transactionData } = data as any;
+    console.log(`Direct API request - updating transaction: ${transactionId}`, transactionData);
+    return await updateTransaction(transactionId, transactionData);
   }
   
   if (method === 'POST' && url === '/api/categories') {

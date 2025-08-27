@@ -6,12 +6,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import * as Icons from "lucide-react";
-import { Search, Calendar, Filter, Download, Plus, TrendingUp, TrendingDown } from "lucide-react";
+import { Search, Calendar, Filter, Download, Plus, TrendingUp, TrendingDown, Edit } from "lucide-react";
 import AddTransactionModal from "@/components/add-transaction-modal";
+import EditTransactionModal from "@/components/edit-transaction-modal";
 import Header from "@/components/header";
 
 export default function Transactions() {
   const [isAddTransactionOpen, setIsAddTransactionOpen] = useState(false);
+  const [isEditTransactionOpen, setIsEditTransactionOpen] = useState(false);
+  const [editingTransaction, setEditingTransaction] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("all");
   const [filterCategory, setFilterCategory] = useState("all");
@@ -80,6 +83,18 @@ export default function Transactions() {
   );
 
   const netAmount = totals.income - totals.expenses;
+
+  // Handle edit transaction
+  const handleEditTransaction = (transaction: any) => {
+    console.log('Opening edit modal for transaction:', transaction);
+    setEditingTransaction(transaction);
+    setIsEditTransactionOpen(true);
+  };
+
+  const handleCloseEditModal = () => {
+    setIsEditTransactionOpen(false);
+    setEditingTransaction(null);
+  };
 
   if (transactionsLoading) {
     return (
@@ -241,12 +256,13 @@ export default function Transactions() {
                     <th className="text-left p-3 font-medium text-muted-foreground">Category</th>
                     <th className="text-left p-3 font-medium text-muted-foreground">Type</th>
                     <th className="text-right p-3 font-medium text-muted-foreground">Amount</th>
+                    <th className="text-center p-3 font-medium text-muted-foreground">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredTransactions.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="text-center py-12 text-muted-foreground">
+                      <td colSpan={6} className="text-center py-12 text-muted-foreground">
                         No transactions found. Try adjusting your filters.
                       </td>
                     </tr>
@@ -297,6 +313,17 @@ export default function Transactions() {
                           }`}>
                             {transaction.type === "income" ? "+" : "-"}{formatCurrency(transaction.amount)}
                           </td>
+                          <td className="p-3 text-center">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleEditTransaction(transaction)}
+                              className="h-8 w-8 text-muted-foreground hover:text-foreground transition-colors"
+                              title="Edit transaction"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </td>
                         </tr>
                       );
                     })
@@ -311,6 +338,12 @@ export default function Transactions() {
       <AddTransactionModal
         isOpen={isAddTransactionOpen}
         onClose={() => setIsAddTransactionOpen(false)}
+      />
+      
+      <EditTransactionModal
+        isOpen={isEditTransactionOpen}
+        onClose={handleCloseEditModal}
+        transaction={editingTransaction}
       />
     </div>
   );

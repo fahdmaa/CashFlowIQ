@@ -54,6 +54,50 @@ export const createTransaction = async (transaction: any) => {
   return data;
 };
 
+export const updateTransaction = async (transactionId: string, transaction: any) => {
+  console.log(`updateTransaction called with ID: ${transactionId}`, transaction);
+  await setAuthToken();
+  
+  // Get current user
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  if (userError || !user) {
+    console.error('User authentication failed:', userError);
+    throw new Error('User not authenticated');
+  }
+  
+  console.log(`User authenticated: ${user.id}, updating transaction: ${transactionId}`);
+  
+  // Update the transaction
+  const { data, error } = await supabase
+    .from('transactions')
+    .update({
+      amount: parseFloat(transaction.amount),
+      description: transaction.description,
+      category: transaction.category,
+      type: transaction.type,
+      date: new Date(transaction.date).toISOString(),
+    })
+    .eq('id', transactionId)
+    .eq('user_id', user.id)
+    .select()
+    .single();
+  
+  console.log('Update transaction result:', { data, error });
+  
+  if (error) {
+    console.error('Update error:', error);
+    throw new Error(error.message);
+  }
+  
+  if (!data) {
+    console.warn('No transaction was updated - may not exist or belong to user');
+    throw new Error('Transaction not found or you do not have permission to edit it');
+  }
+  
+  console.log('Transaction updated successfully:', data);
+  return data;
+};
+
 // Categories
 export const getCategories = async () => {
   await setAuthToken();
