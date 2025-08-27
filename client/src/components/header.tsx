@@ -55,7 +55,7 @@ export default function Header({ onAddTransaction }: HeaderProps) {
           <div className="flex items-center space-x-8">
             <Logo 
               size="lg" 
-              showText={true} 
+              showText={false} 
               className="animate-fadeIn"
             />
             <nav className="hidden md:flex space-x-8">
