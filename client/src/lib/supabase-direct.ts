@@ -204,6 +204,28 @@ export const updateBudget = async (category: string, monthlyLimit: number) => {
   };
 };
 
+// Clean up duplicate budgets (one-time function)
+export const cleanupDuplicateBudgets = async () => {
+  setAuthToken();
+  
+  // Get current user
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  if (userError || !user) throw new Error('User not authenticated');
+  
+  // Delete any budgets with URL-encoded category names
+  const { error } = await supabase
+    .from('budgets')
+    .delete()
+    .eq('user_id', user.id)
+    .like('category', '%20%'); // Delete categories with encoded spaces (%20)
+  
+  if (error) {
+    console.error('Error cleaning up duplicate budgets:', error);
+  } else {
+    console.log('Successfully cleaned up duplicate budgets');
+  }
+};
+
 // Analytics
 export const getOverviewAnalytics = async () => {
   setAuthToken();

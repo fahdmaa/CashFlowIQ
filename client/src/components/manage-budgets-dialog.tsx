@@ -33,15 +33,17 @@ function ManageBudgetsDialog({ open, onOpenChange }: ManageBudgetsDialogProps) {
 
   const updateBudget = useMutation({
     mutationFn: async ({ category, monthlyLimit }: { category: string; monthlyLimit: string }) => {
-      console.log(`Updating budget API call for ${category} with limit: ${monthlyLimit}`);
-      const result = await directApiRequest("PUT", `/api/budgets/${encodeURIComponent(category)}`, { 
+      console.log(`Updating budget API call for "${category}" with limit: ${monthlyLimit}`);
+      // Pass category and monthlyLimit directly in the data object
+      const result = await directApiRequest("PUT", "/api/budgets", { 
+        category: category,
         monthlyLimit: parseFloat(monthlyLimit) 
       });
-      console.log(`Update result for ${category}:`, result);
+      console.log(`Update result for "${category}":`, result);
       return result;
     },
     onError: (error, variables) => {
-      console.error(`Failed to update budget for ${variables.category}:`, error);
+      console.error(`Failed to update budget for "${variables.category}":`, error);
     }
   });
 
