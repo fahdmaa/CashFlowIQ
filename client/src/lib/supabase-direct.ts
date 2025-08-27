@@ -110,6 +110,25 @@ export const deleteCategory = async (categoryId: string) => {
   return { success: true };
 };
 
+export const deleteBudget = async (budgetId: string) => {
+  setAuthToken();
+  
+  // Get current user
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  if (userError || !user) throw new Error('User not authenticated');
+  
+  // Delete the budget
+  const { error } = await supabase
+    .from('budgets')
+    .delete()
+    .eq('id', budgetId)
+    .eq('user_id', user.id); // Extra security check
+  
+  if (error) throw new Error(error.message);
+  
+  return { success: true };
+};
+
 // Budgets
 export const getBudgets = async () => {
   setAuthToken();

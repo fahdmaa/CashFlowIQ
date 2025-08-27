@@ -48,26 +48,25 @@ function ManageBudgetsDialog({ open, onOpenChange }: ManageBudgetsDialogProps) {
     }
   });
 
-  const deleteCategory = useMutation({
-    mutationFn: async (categoryId: string) => {
-      console.log(`Deleting category with ID: ${categoryId}`);
-      const result = await directApiRequest("DELETE", "/api/categories", { categoryId });
+  const deleteBudget = useMutation({
+    mutationFn: async (budgetId: string) => {
+      console.log(`Deleting budget with ID: ${budgetId}`);
+      const result = await directApiRequest("DELETE", "/api/budgets", { budgetId });
       console.log(`Delete result:`, result);
       return result;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/categories"] });
       queryClient.invalidateQueries({ queryKey: ["/api/budgets"] });
       toast({
         title: "Success",
-        description: "Category deleted successfully",
+        description: "Budget deleted successfully",
       });
     },
     onError: (error) => {
-      console.error(`Failed to delete category:`, error);
+      console.error(`Failed to delete budget:`, error);
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to delete category",
+        description: error instanceof Error ? error.message : "Failed to delete budget",
         variant: "destructive",
       });
     }
@@ -129,51 +128,47 @@ function ManageBudgetsDialog({ open, onOpenChange }: ManageBudgetsDialogProps) {
           <DialogTitle>Manage Budgets</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
-          {budgets?.map((budget) => {
-            const category = categories?.find((c) => c.name === budget.category);
-            return (
-              <div key={budget.id} className="flex items-center justify-between">
-                <span className="flex-1">{budget.category}</span>
-                <div className="flex items-center space-x-2">
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => changeValue(budget.category, -10)}
-                    data-testid={`decrease-${budget.category.toLowerCase().replace(/\s+/g, '-')}`}
-                  >
-                    <ChevronDown className="h-4 w-4" />
-                  </Button>
-                  <Input
-                    type="number"
-                    value={values[budget.category] || ""}
-                    onChange={(e) => handleInputChange(budget.category, e.target.value)}
-                    className="w-24 text-right"
-                    data-testid={`input-${budget.category.toLowerCase().replace(/\s+/g, '-')}`}
-                  />
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => changeValue(budget.category, 10)}
-                    data-testid={`increase-${budget.category.toLowerCase().replace(/\s+/g, '-')}`}
-                  >
-                    <ChevronUp className="h-4 w-4" />
-                  </Button>
-                  {category && (
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => deleteCategory.mutate(category.id)}
-                      disabled={deleteCategory.isPending}
-                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                      data-testid={`delete-${budget.category.toLowerCase().replace(/\s+/g, '-')}`}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
+          {budgets?.map((budget) => (
+            <div key={budget.id} className="flex items-center justify-between">
+              <span className="flex-1">{budget.category}</span>
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => changeValue(budget.category, -10)}
+                  data-testid={`decrease-${budget.category.toLowerCase().replace(/\s+/g, '-')}`}
+                >
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+                <Input
+                  type="number"
+                  value={values[budget.category] || ""}
+                  onChange={(e) => handleInputChange(budget.category, e.target.value)}
+                  className="w-24 text-right"
+                  data-testid={`input-${budget.category.toLowerCase().replace(/\s+/g, '-')}`}
+                />
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => changeValue(budget.category, 10)}
+                  data-testid={`increase-${budget.category.toLowerCase().replace(/\s+/g, '-')}`}
+                >
+                  <ChevronUp className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => deleteBudget.mutate(budget.id)}
+                  disabled={deleteBudget.isPending}
+                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                  data-testid={`delete-${budget.category.toLowerCase().replace(/\s+/g, '-')}`}
+                  title="Delete budget"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
               </div>
-            );
-          })}
+            </div>
+          ))}
 
           <div className="pt-4 border-t mt-4">
             <h3 className="mb-2 text-lg font-semibold">Add a custom budget</h3>
