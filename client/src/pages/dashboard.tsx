@@ -9,21 +9,51 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Calendar } from "lucide-react";
 import { useState } from "react";
 
+// Helper function to get current salary cycle month
+const getCurrentSalaryCycleMonth = () => {
+  const today = new Date();
+  const currentDay = today.getDate();
+  
+  let targetDate: Date;
+  if (currentDay >= 27) {
+    // We're in the next month's salary cycle (starts on 27th)
+    targetDate = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+  } else {
+    // We're still in the current month's salary cycle
+    targetDate = new Date(today.getFullYear(), today.getMonth(), 1);
+  }
+  
+  return `${targetDate.getFullYear()}-${String(targetDate.getMonth() + 1).padStart(2, '0')}`;
+};
+
 export default function Dashboard() {
   const [isAddTransactionOpen, setIsAddTransactionOpen] = useState(false);
   
-  // Generate current month as default (YYYY-MM format)
-  const currentDate = new Date();
-  const currentMonth = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
+  // Generate current salary cycle month as default (YYYY-MM format)
+  const currentMonth = getCurrentSalaryCycleMonth();
   const [selectedMonth, setSelectedMonth] = useState(currentMonth);
   
-  // Generate month options (current month + 11 previous months)
+  // Generate month options (current salary cycle month + 11 previous months)
   const generateMonthOptions = () => {
     const options = [];
     const today = new Date();
+    const currentDay = today.getDate();
+    
+    // Start from the current salary cycle month
+    let startMonth = today.getMonth();
+    let startYear = today.getFullYear();
+    
+    // If we're past the 27th, we're in the next month's salary cycle
+    if (currentDay >= 27) {
+      startMonth += 1;
+      if (startMonth > 11) {
+        startMonth = 0;
+        startYear += 1;
+      }
+    }
     
     for (let i = 0; i < 12; i++) {
-      const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
+      const date = new Date(startYear, startMonth - i, 1);
       const value = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
       const label = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
       options.push({ value, label });

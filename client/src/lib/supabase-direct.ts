@@ -10,7 +10,17 @@ const getSalaryCycleDates = (selectedMonth?: string) => {
     const [year, month] = selectedMonth.split('-').map(Number);
     targetDate = new Date(year, month - 1, 1);
   } else {
-    targetDate = new Date();
+    // For current date, determine which salary cycle we're in
+    const today = new Date();
+    const currentDay = today.getDate();
+    
+    if (currentDay >= 27) {
+      // We're in the next month's salary cycle (starts on 27th)
+      targetDate = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+    } else {
+      // We're still in the current month's salary cycle
+      targetDate = new Date(today.getFullYear(), today.getMonth(), 1);
+    }
   }
   
   // Salary cycle: 27th of previous month to 26th of current month
