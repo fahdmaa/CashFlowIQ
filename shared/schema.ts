@@ -16,7 +16,7 @@ export const transactions = pgTable("transactions", {
   amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
   description: text("description").notNull(),
   category: text("category").notNull(),
-  type: text("type").notNull(), // 'income' or 'expense'
+  type: text("type").notNull(), // 'income', 'expense', or 'savings'
   date: timestamp("date").notNull(),
   createdAt: timestamp("created_at").default(sql`now()`).notNull(),
 });

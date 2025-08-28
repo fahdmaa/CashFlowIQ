@@ -20,6 +20,7 @@ const transactionFormSchema = insertTransactionSchema.extend({
     "Amount must be a positive number"
   ),
   date: z.string().min(1, "Date is required"),
+  type: z.enum(["income", "expense", "savings"]),
 });
 
 type TransactionForm = z.infer<typeof transactionFormSchema>;
@@ -71,6 +72,9 @@ export default function AddTransactionModal({ isOpen, onClose }: AddTransactionM
   useEffect(() => {
     if (watchedType === "income") {
       setValue("category", "Income");
+      setSuggestedCategory("");
+    } else if (watchedType === "savings") {
+      setValue("category", "Savings");
       setSuggestedCategory("");
     }
   }, [watchedType, setValue]);
@@ -149,7 +153,7 @@ export default function AddTransactionModal({ isOpen, onClose }: AddTransactionM
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div>
             <Label className="text-sm font-medium text-foreground mb-2 block">Type</Label>
-            <RadioGroup defaultValue="expense" onValueChange={(value) => setValue("type", value as "income" | "expense")}>
+            <RadioGroup defaultValue="expense" onValueChange={(value) => setValue("type", value as "income" | "expense" | "savings")}>
               <div className="flex space-x-4">
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="expense" id="expense" data-testid="radio-expense" />
@@ -158,6 +162,10 @@ export default function AddTransactionModal({ isOpen, onClose }: AddTransactionM
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="income" id="income" data-testid="radio-income" />
                   <Label htmlFor="income" className="text-sm">Income</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="savings" id="savings" data-testid="radio-savings" />
+                  <Label htmlFor="savings" className="text-sm">Savings</Label>
                 </div>
               </div>
             </RadioGroup>
@@ -193,41 +201,37 @@ export default function AddTransactionModal({ isOpen, onClose }: AddTransactionM
             )}
           </div>
 
-          <div>
-            <Label htmlFor="category" className="text-sm font-medium text-foreground mb-2 block">Category</Label>
-            <Select onValueChange={(value) => setValue("category", value)} value={getValues("category")}>
-              <SelectTrigger data-testid="select-category">
-                <SelectValue placeholder="Select category" />
-              </SelectTrigger>
-              <SelectContent>
-                {getFilteredCategories().map(c => (
-                  <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>
-                ))}
-                {/* Fallback options if categories API fails */}
-                {(!categories || categories.length === 0) && (
-                  <>
-                    {watchedType === "expense" ? (
-                      <>
-                        <SelectItem value="Food & Dining">Food & Dining</SelectItem>
-                        <SelectItem value="Transportation">Transportation</SelectItem>
-                        <SelectItem value="Entertainment">Entertainment</SelectItem>
-                        <SelectItem value="Shopping">Shopping</SelectItem>
-                        <SelectItem value="Bills & Utilities">Bills & Utilities</SelectItem>
-                      </>
-                    ) : (
-                      <SelectItem value="Income">Income</SelectItem>
-                    )}
-                  </>
-                )}
-              </SelectContent>
-            </Select>
-            {suggestedCategory && watchedType === "expense" && (
-              <p className="text-sm text-primary mt-1">Suggested: {suggestedCategory}</p>
-            )}
-            {errors.category && (
-              <p className="text-sm text-destructive mt-1">{errors.category.message}</p>
-            )}
-          </div>
+          {watchedType === "expense" && (
+            <div>
+              <Label htmlFor="category" className="text-sm font-medium text-foreground mb-2 block">Category</Label>
+              <Select onValueChange={(value) => setValue("category", value)} value={getValues("category")}>
+                <SelectTrigger data-testid="select-category">
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {getFilteredCategories().map(c => (
+                    <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>
+                  ))}
+                  {/* Fallback options if categories API fails */}
+                  {(!categories || categories.length === 0) && (
+                    <>
+                      <SelectItem value="Food & Dining">Food & Dining</SelectItem>
+                      <SelectItem value="Transportation">Transportation</SelectItem>
+                      <SelectItem value="Entertainment">Entertainment</SelectItem>
+                      <SelectItem value="Shopping">Shopping</SelectItem>
+                      <SelectItem value="Bills & Utilities">Bills & Utilities</SelectItem>
+                    </>
+                  )}
+                </SelectContent>
+              </Select>
+              {suggestedCategory && (
+                <p className="text-sm text-primary mt-1">Suggested: {suggestedCategory}</p>
+              )}
+              {errors.category && (
+                <p className="text-sm text-destructive mt-1">{errors.category.message}</p>
+              )}
+            </div>
+          )}
 
           <div>
             <Label htmlFor="date" className="text-sm font-medium text-foreground mb-2 block">Date</Label>

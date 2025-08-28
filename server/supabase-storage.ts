@@ -492,7 +492,7 @@ export class SupabaseStorage implements IStorage {
       amount: data.amount,
       description: data.description,
       category: data.category,
-      type: data.type as 'income' | 'expense',
+      type: data.type as 'income' | 'expense' | 'savings',
       date: new Date(data.date),
       createdAt: new Date(data.created_at)
     };

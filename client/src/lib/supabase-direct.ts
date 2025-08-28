@@ -692,13 +692,14 @@ export const getOverviewAnalytics = async (selectedMonth?: string) => {
   const monthlySpending = (transactions || [])
     .filter(t => t.type === "expense")
     .reduce((sum, t) => sum + parseFloat(t.amount.toString()), 0);
-
-  const currentBalance = monthlyIncome - monthlySpending;
   
-  // Calculate savings based on "savings" category sum
+  // Calculate savings - transactions with type "savings"
   const savingsAmount = (transactions || [])
-    .filter(t => t.category && t.category.toLowerCase() === "savings")
+    .filter(t => t.type === "savings")
     .reduce((sum, t) => sum + parseFloat(t.amount.toString()), 0);
+
+  // Current balance = income - spending - savings (savings are deducted from income)
+  const currentBalance = monthlyIncome - monthlySpending - savingsAmount;
   
   // Use savings amount directly as percentage (or show actual amount)
   // For now, let's show actual savings amount as the "progress"
