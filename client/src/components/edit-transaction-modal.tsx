@@ -208,14 +208,18 @@ export default function EditTransactionModal({ isOpen, onClose, transaction }: E
 
           {/* Amount */}
           <div>
-            <Label htmlFor="amount">Amount (DH)</Label>
-            <Input
-              id="amount"
-              type="number"
-              step="0.01"
-              placeholder="0.00"
-              {...register("amount")}
-            />
+            <Label htmlFor="amount">Amount</Label>
+            <div className="relative">
+              <Input
+                id="amount"
+                type="number"
+                step="0.01"
+                placeholder="0.00"
+                className="pr-12"
+                {...register("amount")}
+              />
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-medium">DH</span>
+            </div>
             {errors.amount && (
               <p className="text-sm text-destructive mt-1">
                 {errors.amount.message}
@@ -283,16 +287,17 @@ export default function EditTransactionModal({ isOpen, onClose, transaction }: E
 
           {/* Action Buttons */}
           <div className="flex justify-end space-x-2 pt-4">
-            <Button type="button" variant="outline" onClick={handleClose}>
+            <Button 
+              type="button" 
+              onClick={handleClose}
+              className="bg-white/10 backdrop-blur-md border border-white/20 text-foreground hover:bg-white/20 transition-all duration-300 shadow-lg hover:shadow-xl"
+            >
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={updateTransactionMutation.isPending}
-              className={currentType === "income" 
-                ? "bg-secondary hover:bg-secondary/90 text-white" 
-                : "bg-destructive hover:bg-destructive/90 text-white"
-              }
+              className="bg-gradient-to-r from-green-500/20 to-blue-600/20 backdrop-blur-md border border-white/30 text-foreground hover:from-green-500/30 hover:to-blue-600/30 transition-all duration-300 shadow-lg hover:shadow-2xl hover:scale-105"
             >
               {updateTransactionMutation.isPending ? "Updating..." : "Update Transaction"}
             </Button>

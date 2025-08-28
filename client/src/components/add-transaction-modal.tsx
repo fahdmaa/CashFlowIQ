@@ -174,15 +174,15 @@ export default function AddTransactionModal({ isOpen, onClose }: AddTransactionM
           <div>
             <Label htmlFor="amount" className="text-sm font-medium text-foreground mb-2 block">Amount</Label>
             <div className="relative">
-              <span className="absolute left-3 top-3 text-muted-foreground">DH</span>
               <Input
                 {...register("amount")}
                 type="number"
                 step="0.01"
                 placeholder="0.00"
-                className="pl-8"
+                className="pr-12"
                 data-testid="input-amount"
               />
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-medium">DH</span>
             </div>
             {errors.amount && (
               <p className="text-sm text-destructive mt-1">{errors.amount.message}</p>
@@ -248,16 +248,15 @@ export default function AddTransactionModal({ isOpen, onClose }: AddTransactionM
           <div className="flex space-x-3 pt-4">
             <Button 
               type="button" 
-              variant="outline" 
               onClick={handleClose} 
-              className="flex-1"
+              className="flex-1 bg-white/10 backdrop-blur-md border border-white/20 text-foreground hover:bg-white/20 transition-all duration-300 shadow-lg hover:shadow-xl"
               data-testid="button-cancel"
             >
               Cancel
             </Button>
             <Button 
               type="submit" 
-              className="flex-1 bg-primary text-white hover:bg-primary/90"
+              className="flex-1 bg-gradient-to-r from-blue-500/20 to-purple-600/20 backdrop-blur-md border border-white/30 text-foreground hover:from-blue-500/30 hover:to-purple-600/30 transition-all duration-300 shadow-lg hover:shadow-2xl hover:scale-105"
               disabled={createTransactionMutation.isPending}
               data-testid="button-submit"
             >
