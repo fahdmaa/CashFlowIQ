@@ -1,6 +1,30 @@
 import { supabase } from './supabase-auth';
 import { getAuthToken } from './supabase-auth';
 
+// Helper function to calculate salary cycle dates (27th to 26th)
+const getSalaryCycleDates = (selectedMonth?: string) => {
+  let targetDate: Date;
+  
+  if (selectedMonth) {
+    // Parse selectedMonth in format "YYYY-MM"
+    const [year, month] = selectedMonth.split('-').map(Number);
+    targetDate = new Date(year, month - 1, 1);
+  } else {
+    targetDate = new Date();
+  }
+  
+  // Salary cycle: 27th of previous month to 26th of current month
+  const year = targetDate.getFullYear();
+  const month = targetDate.getMonth();
+  
+  // Start date: 27th of previous month
+  const startDate = new Date(year, month - 1, 27);
+  // End date: 26th of current month
+  const endDate = new Date(year, month, 26, 23, 59, 59, 999);
+  
+  return { startDate, endDate };
+};
+
 // Set auth token for all requests
 const setAuthToken = async () => {
   const token = getAuthToken();
@@ -27,16 +51,14 @@ export const getTransactions = async (selectedMonth?: string) => {
     .select('*')
     .order('date', { ascending: false });
   
-  // Filter by month if provided
+  // Filter by salary cycle if month provided
   if (selectedMonth) {
-    const [year, month] = selectedMonth.split('-').map(Number);
-    const startOfMonth = new Date(year, month - 1, 1).toISOString();
-    const endOfMonth = new Date(year, month, 0).toISOString();
+    const { startDate, endDate } = getSalaryCycleDates(selectedMonth);
     
-    console.log(`Filtering transactions from ${startOfMonth} to ${endOfMonth}`);
+    console.log(`Filtering transactions for salary cycle from ${startDate.toISOString()} to ${endDate.toISOString()}`);
     query = query
-      .gte('date', startOfMonth)
-      .lte('date', endOfMonth);
+      .gte('date', startDate.toISOString())
+      .lte('date', endDate.toISOString());
   }
   
   const { data, error } = await query;
@@ -427,28 +449,19 @@ export const getBudgets = async (selectedMonth?: string) => {
   
   console.log('Raw budget data from database:', data);
   
-  // Calculate actual spending for the selected month (or current month if none selected)
-  let targetDate: Date;
-  if (selectedMonth) {
-    const [year, month] = selectedMonth.split('-').map(Number);
-    targetDate = new Date(year, month - 1, 1);
-  } else {
-    targetDate = new Date();
-  }
+  // Calculate actual spending for the selected salary cycle (or current cycle if none selected)
+  const { startDate, endDate } = getSalaryCycleDates(selectedMonth);
   
-  const startOfMonth = new Date(targetDate.getFullYear(), targetDate.getMonth(), 1);
-  const endOfMonth = new Date(targetDate.getFullYear(), targetDate.getMonth() + 1, 0);
+  console.log(`Calculating spending for salary cycle from ${startDate.toISOString()} to ${endDate.toISOString()}`);
   
-  console.log(`Calculating spending from ${startOfMonth.toISOString()} to ${endOfMonth.toISOString()}`);
-  
-  // Get transactions for the selected month
+  // Get transactions for the selected salary cycle
   const { data: transactions, error: txError } = await supabase
     .from('transactions')
     .select('amount, category, type')
     .eq('user_id', user.id)
     .eq('type', 'expense')
-    .gte('date', startOfMonth.toISOString())
-    .lte('date', endOfMonth.toISOString());
+    .gte('date', startDate.toISOString())
+    .lte('date', endDate.toISOString());
   
   if (txError) {
     console.warn('Error fetching transactions for budget calculation:', txError);
@@ -665,23 +678,13 @@ export const cleanupOrphanedCategories = async () => {
 export const getOverviewAnalytics = async (selectedMonth?: string) => {
   await setAuthToken();
   
-  let targetDate: Date;
-  if (selectedMonth) {
-    // Parse selectedMonth in format "YYYY-MM"
-    const [year, month] = selectedMonth.split('-').map(Number);
-    targetDate = new Date(year, month - 1, 1); // month - 1 because Date uses 0-based months
-  } else {
-    targetDate = new Date(); // Use current month as default
-  }
-  
-  const startOfMonth = new Date(targetDate.getFullYear(), targetDate.getMonth(), 1);
-  const endOfMonth = new Date(targetDate.getFullYear(), targetDate.getMonth() + 1, 0);
+  const { startDate, endDate } = getSalaryCycleDates(selectedMonth);
   
   const { data: transactions, error } = await supabase
     .from('transactions')
     .select('amount, type, category')
-    .gte('date', startOfMonth.toISOString())
-    .lte('date', endOfMonth.toISOString());
+    .gte('date', startDate.toISOString())
+    .lte('date', endDate.toISOString());
 
   if (error) throw new Error(error.message);
 
@@ -729,19 +732,20 @@ export const getSpendingAnalytics = async (days: number = 7, selectedMonth?: str
   let startDate: Date;
   
   if (selectedMonth) {
-    // Parse selectedMonth in format "YYYY-MM" and get spending for that specific month
-    const [year, month] = selectedMonth.split('-').map(Number);
-    startDate = new Date(year, month - 1, 1); // First day of the month
-    endDate = new Date(year, month, 0); // Last day of the month
+    // Use salary cycle dates for the selected month
+    const { startDate: cycleStart, endDate: cycleEnd } = getSalaryCycleDates(selectedMonth);
     
-    // For monthly view, we still want to show the specified period within that month
-    // But if the period is longer than the month, just show the whole month
-    const monthDays = endDate.getDate();
-    if (days > monthDays) {
-      // Keep the whole month
+    // For spending analytics, we still want to respect the 'days' parameter within the cycle
+    const cycleDays = Math.ceil((cycleEnd.getTime() - cycleStart.getTime()) / (1000 * 60 * 60 * 24));
+    if (days >= cycleDays) {
+      // Show the entire salary cycle
+      startDate = cycleStart;
+      endDate = cycleEnd;
     } else {
-      // Show last 'days' of the month
-      startDate = new Date(year, month - 1, Math.max(1, monthDays - days + 1));
+      // Show last 'days' within the salary cycle
+      endDate = cycleEnd;
+      startDate = new Date(cycleEnd);
+      startDate.setDate(cycleEnd.getDate() - days + 1);
     }
   } else {
     // Default behavior - last N days from today
