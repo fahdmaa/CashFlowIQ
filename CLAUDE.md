@@ -24,6 +24,8 @@
 - React Query (TanStack Query) for server state management
 - Direct API calls bypass serverless functions for better performance
 - Row Level Security (RLS) policies ensure data isolation
+- Transaction types: 'income', 'expense', 'savings' (savings deducted from income in balance calculations)
+- Income and savings transactions auto-set categories, only expenses require category selection
 
 ### Testing
 - Run lint and type checks before committing if available
