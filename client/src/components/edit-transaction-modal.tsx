@@ -20,6 +20,7 @@ const transactionFormSchema = insertTransactionSchema.extend({
     "Amount must be a positive number"
   ),
   date: z.string().min(1, "Date is required"),
+  type: z.enum(["income", "expense", "savings"]),
 });
 
 type TransactionForm = z.infer<typeof transactionFormSchema>;
@@ -115,8 +116,14 @@ export default function EditTransactionModal({ isOpen, onClose, transaction }: E
   const currentType = watch("type");
 
   useEffect(() => {
-    if (description && description.length > 2 && categories) {
-      const suggested = categorizeTransaction(description, categories);
+    if (currentType === "income") {
+      setValue("category", "Income");
+      setSuggestedCategory("");
+    } else if (currentType === "savings") {
+      setValue("category", "Savings");
+      setSuggestedCategory("");
+    } else if (currentType === "expense" && description && description.length > 2) {
+      const suggested = categorizeTransaction(description);
       if (suggested && suggested !== getValues("category")) {
         setSuggestedCategory(suggested);
       } else {
@@ -125,7 +132,7 @@ export default function EditTransactionModal({ isOpen, onClose, transaction }: E
     } else {
       setSuggestedCategory("");
     }
-  }, [description, categories, getValues]);
+  }, [description, currentType, setValue, getValues]);
 
   const handleClose = () => {
     reset();
@@ -160,19 +167,25 @@ export default function EditTransactionModal({ isOpen, onClose, transaction }: E
             <Label className="text-base font-medium">Transaction Type</Label>
             <RadioGroup
               value={watch("type")}
-              onValueChange={(value) => setValue("type", value as "income" | "expense")}
-              className="flex space-x-6 mt-2"
+              onValueChange={(value) => setValue("type", value as "income" | "expense" | "savings")}
+              className="flex space-x-4 mt-2"
             >
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="expense" id="expense" />
-                <Label htmlFor="expense" className="text-destructive">
+                <Label htmlFor="expense" className="text-sm">
                   Expense
                 </Label>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="income" id="income" />
-                <Label htmlFor="income" className="text-secondary">
+                <Label htmlFor="income" className="text-sm">
                   Income
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="savings" id="savings" />
+                <Label htmlFor="savings" className="text-sm">
+                  Savings
                 </Label>
               </div>
             </RadioGroup>
@@ -210,46 +223,48 @@ export default function EditTransactionModal({ isOpen, onClose, transaction }: E
             )}
           </div>
 
-          {/* Category */}
-          <div>
-            <Label htmlFor="category">Category</Label>
-            {suggestedCategory && (
-              <div className="mb-2 p-2 bg-accent rounded-md border">
-                <p className="text-sm text-muted-foreground mb-1">
-                  Suggested category based on description:
+          {/* Category - only show for expenses */}
+          {currentType === "expense" && (
+            <div>
+              <Label htmlFor="category">Category</Label>
+              {suggestedCategory && (
+                <div className="mb-2 p-2 bg-accent rounded-md border">
+                  <p className="text-sm text-muted-foreground mb-1">
+                    Suggested category based on description:
+                  </p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={acceptSuggestion}
+                    className="text-xs"
+                  >
+                    Use "{suggestedCategory}"
+                  </Button>
+                </div>
+              )}
+              <Select
+                value={watch("category")}
+                onValueChange={(value) => setValue("category", value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {filteredCategories.map((category) => (
+                    <SelectItem key={category.id} value={category.name}>
+                      {category.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.category && (
+                <p className="text-sm text-destructive mt-1">
+                  {errors.category.message}
                 </p>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={acceptSuggestion}
-                  className="text-xs"
-                >
-                  Use "{suggestedCategory}"
-                </Button>
-              </div>
-            )}
-            <Select
-              value={watch("category")}
-              onValueChange={(value) => setValue("category", value)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select category" />
-              </SelectTrigger>
-              <SelectContent>
-                {filteredCategories.map((category) => (
-                  <SelectItem key={category.id} value={category.name}>
-                    {category.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {errors.category && (
-              <p className="text-sm text-destructive mt-1">
-                {errors.category.message}
-              </p>
-            )}
-          </div>
+              )}
+            </div>
+          )}
 
           {/* Date */}
           <div>
