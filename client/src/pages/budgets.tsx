@@ -286,62 +286,21 @@ export default function Budgets() {
                           );
                         })}
                       </Pie>
-                      {/* Spent indicators */}
-                      <Pie
-                        data={budgets.map((budget: any) => {
-                          const category = categories?.find((c: any) => c.name === budget.category);
-                          const spentPercentage = (parseFloat(budget.currentSpent) / parseFloat(budget.monthlyLimit)) * 100;
-                          return {
-                            name: `${budget.category} Spent`,
-                            value: Math.min(parseFloat(budget.currentSpent), parseFloat(budget.monthlyLimit)),
-                            color: category?.color || "#3b82f6"
-                          };
-                        })}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={90}
-                        outerRadius={150}
-                        paddingAngle={1}
-                        dataKey="value"
-                        startAngle={90}
-                        endAngle={450}
-                      >
-                        {budgets.map((budget: any, index: number) => {
-                          const category = categories?.find((c: any) => c.name === budget.category);
-                          const baseColor = category?.color || "#3b82f6";
-                          
-                          return (
-                            <Cell 
-                              key={`spent-cell-${index}`} 
-                              fill={`url(#spent-gradient-${index})`}
-                              stroke="none"
-                              className="opacity-60"
-                            />
-                          );
-                        })}
-                      </Pie>
                       <defs>
                         {budgets.map((budget: any, index: number) => {
                           const category = categories?.find((c: any) => c.name === budget.category);
                           const baseColor = category?.color || "#3b82f6";
                           
                           return (
-                            <g key={`gradients-${index}`}>
-                              <linearGradient id={`gradient-${index}`} x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" stopColor={baseColor} stopOpacity="0.9" />
-                                <stop offset="100%" stopColor={baseColor} stopOpacity="0.6" />
-                              </linearGradient>
-                              <linearGradient id={`spent-gradient-${index}`} x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" stopColor={baseColor} stopOpacity="1" />
-                                <stop offset="100%" stopColor={baseColor} stopOpacity="0.8" />
-                              </linearGradient>
-                            </g>
+                            <linearGradient key={`gradient-${index}`} id={`gradient-${index}`} x1="0%" y1="0%" x2="100%" y2="100%">
+                              <stop offset="0%" stopColor={baseColor} stopOpacity="0.9" />
+                              <stop offset="100%" stopColor={baseColor} stopOpacity="0.6" />
+                            </linearGradient>
                           );
                         })}
                       </defs>
                       <Tooltip 
                         formatter={(value: any, name: any, props: any) => {
-                          if (name.includes('Spent')) return null;
                           const budget = budgets.find((b: any) => b.category === name);
                           const spentPercentage = ((parseFloat(budget?.currentSpent || 0) / parseFloat(budget?.monthlyLimit || 1)) * 100).toFixed(1);
                           return [
@@ -349,6 +308,9 @@ export default function Budgets() {
                               <div className="font-semibold text-sm">{formatCurrency(value)} budgeted</div>
                               <div className="text-xs text-muted-foreground">
                                 {formatCurrency(budget?.currentSpent || 0)} spent ({spentPercentage}%)
+                              </div>
+                              <div className="text-xs text-primary">
+                                {formatCurrency(parseFloat(budget?.monthlyLimit || 0) - parseFloat(budget?.currentSpent || 0))} remaining
                               </div>
                             </div>
                           ];

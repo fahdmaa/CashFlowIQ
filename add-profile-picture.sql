@@ -1,4 +1,4 @@
--- COMPREHENSIVE PROFILE PICTURE SETUP SCRIPT
+-- COMPREHENSIVE PROFILE PICTURE SETUP SCRIPT (FIXED VERSION)
 -- Run this entire script in your Supabase SQL Editor
 
 -- 1. First, add the profile_picture_url column if it doesn't exist
@@ -38,27 +38,32 @@ DROP POLICY IF EXISTS "Users can view their own avatars" ON storage.objects;
 DROP POLICY IF EXISTS "Users can upload their own avatars" ON storage.objects;
 DROP POLICY IF EXISTS "Users can update their own avatars" ON storage.objects;
 DROP POLICY IF EXISTS "Users can delete their own avatars" ON storage.objects;
+DROP POLICY IF EXISTS "Users can view avatars" ON storage.objects;
 
--- 4. Create comprehensive storage policies
-CREATE POLICY "Users can view avatars" ON storage.objects
+-- 4. Create comprehensive storage policies (FIXED VERSION)
+-- Allow anyone to view avatar images (since bucket is public)
+CREATE POLICY "Public avatar access" ON storage.objects
 FOR SELECT USING (bucket_id = 'avatar-pictures');
 
+-- Fixed upload policy - properly extract user ID from path
 CREATE POLICY "Users can upload their own avatars" ON storage.objects
 FOR INSERT WITH CHECK (
     bucket_id = 'avatar-pictures' 
-    AND auth.uid()::text = (storage.foldername(name))[1]
+    AND auth.uid()::text = (string_to_array(name, '/'))[1]
 );
 
+-- Fixed update policy
 CREATE POLICY "Users can update their own avatars" ON storage.objects
 FOR UPDATE USING (
     bucket_id = 'avatar-pictures' 
-    AND auth.uid()::text = (storage.foldername(name))[1]
+    AND auth.uid()::text = (string_to_array(name, '/'))[1]
 );
 
+-- Fixed delete policy
 CREATE POLICY "Users can delete their own avatars" ON storage.objects
 FOR DELETE USING (
     bucket_id = 'avatar-pictures' 
-    AND auth.uid()::text = (storage.foldername(name))[1]
+    AND auth.uid()::text = (string_to_array(name, '/'))[1]
 );
 
 -- 5. Ensure user_profiles RLS policies allow profile_picture_url updates

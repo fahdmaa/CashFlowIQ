@@ -853,7 +853,13 @@ export const updateUserProfile = async (updates: { username?: string; profile_pi
 
 export const uploadProfilePicture = async (file: File) => {
   try {
+    console.log('Starting profile picture upload process...');
+    
+    // Ensure we have a valid session
     await setAuthToken();
+    
+    // Wait a moment for auth session to be properly set
+    await new Promise(resolve => setTimeout(resolve, 100));
     
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError || !user) {
@@ -861,7 +867,7 @@ export const uploadProfilePicture = async (file: File) => {
       throw new Error('User not authenticated');
     }
     
-    console.log('Starting upload for user:', user.id, 'file:', file.name);
+    console.log('User authenticated successfully:', user.id);
     
     // Validate file
     if (!file.type.startsWith('image/')) {
@@ -877,7 +883,20 @@ export const uploadProfilePicture = async (file: File) => {
     const timestamp = Date.now();
     const fileName = `${user.id}/profile-${timestamp}.${fileExt}`;
     
-    console.log('Uploading to storage with filename:', fileName);
+    console.log('Uploading file:', file.name, 'as:', fileName);
+    console.log('File details:', {
+      size: file.size,
+      type: file.type,
+      name: file.name
+    });
+    
+    // Double-check current session before upload
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      throw new Error('No active session found');
+    }
+    
+    console.log('Active session found, proceeding with upload...');
     
     // Upload to Supabase Storage
     const { data: uploadData, error: uploadError } = await supabase.storage
@@ -889,6 +908,11 @@ export const uploadProfilePicture = async (file: File) => {
     
     if (uploadError) {
       console.error('Storage upload error:', uploadError);
+      console.error('Error details:', {
+        message: uploadError.message,
+        statusCode: uploadError.statusCode,
+        error: uploadError.error
+      });
       throw new Error(`Upload failed: ${uploadError.message}`);
     }
     
@@ -910,7 +934,12 @@ export const uploadProfilePicture = async (file: File) => {
     } catch (profileError) {
       console.error('Profile update failed, but upload succeeded:', profileError);
       // Delete uploaded file if profile update fails
-      await supabase.storage.from('avatar-pictures').remove([fileName]);
+      try {
+        await supabase.storage.from('avatar-pictures').remove([fileName]);
+        console.log('Cleaned up uploaded file due to profile update failure');
+      } catch (cleanupError) {
+        console.warn('Failed to clean up uploaded file:', cleanupError);
+      }
       throw profileError;
     }
   } catch (error) {
