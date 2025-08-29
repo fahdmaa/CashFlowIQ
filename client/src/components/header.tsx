@@ -1,13 +1,16 @@
-import { Plus, User, Moon, Sun, LogOut } from "lucide-react";
+import { Plus, User, Moon, Sun, LogOut, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { getCurrentUser, logout } from "@/lib/supabase-auth";
+import { getUserProfile } from "@/lib/supabase-direct";
 import Logo from "@/components/logo";
+import ProfilePictureUpload from "@/components/profile-picture-upload";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
@@ -19,6 +22,8 @@ export default function Header({ onAddTransaction }: HeaderProps) {
   const [isDark, setIsDark] = useState(false);
   const [location, navigate] = useLocation();
   const [currentUser, setCurrentUser] = useState<string | null>(null);
+  const [profilePictureUrl, setProfilePictureUrl] = useState<string | null>(null);
+  const [showProfileUpload, setShowProfileUpload] = useState(false);
 
   useEffect(() => {
     const stored = localStorage.getItem("theme");
@@ -27,9 +32,22 @@ export default function Header({ onAddTransaction }: HeaderProps) {
       setIsDark(true);
     }
 
-    // Load current user
-    const user = getCurrentUser();
-    setCurrentUser(user?.username || null);
+    // Load current user and profile
+    const loadUserProfile = async () => {
+      const user = getCurrentUser();
+      setCurrentUser(user?.username || null);
+      
+      if (user) {
+        try {
+          const profile = await getUserProfile();
+          setProfilePictureUrl(profile?.profile_picture_url || null);
+        } catch (error) {
+          console.error('Failed to load user profile:', error);
+        }
+      }
+    };
+
+    loadUserProfile();
   }, []);
 
   const toggleTheme = () => {
@@ -122,14 +140,31 @@ export default function Header({ onAddTransaction }: HeaderProps) {
             </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center transition-all hover:scale-110 cursor-pointer">
-                  <User className="h-4 w-4 text-muted-foreground" />
+                <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center transition-all hover:scale-110 cursor-pointer overflow-hidden">
+                  {profilePictureUrl ? (
+                    <img 
+                      src={profilePictureUrl} 
+                      alt="Profile" 
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <User className="h-4 w-4 text-muted-foreground" />
+                  )}
                 </div>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
+              <DropdownMenuContent align="end" className="w-64">
                 <div className="px-2 py-1.5 text-sm font-medium">
                   {currentUser}
                 </div>
+                <DropdownMenuSeparator />
+                <div className="p-4">
+                  <ProfilePictureUpload
+                    currentImageUrl={profilePictureUrl}
+                    onImageUpdate={setProfilePictureUrl}
+                    size="sm"
+                  />
+                </div>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout}>
                   <LogOut className="h-4 w-4 mr-2" />
                   Logout

@@ -806,3 +806,95 @@ export const getSpendingAnalytics = async (days: number = 7, selectedMonth?: str
   
   return spendingByDate;
 };
+
+// User Profile Functions
+export const getUserProfile = async () => {
+  await setAuthToken();
+  
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  if (userError || !user) throw new Error('User not authenticated');
+  
+  const { data, error } = await supabase
+    .from('user_profiles')
+    .select('*')
+    .eq('id', user.id)
+    .single();
+  
+  if (error) throw new Error(error.message);
+  return data;
+};
+
+export const updateUserProfile = async (updates: { username?: string; profile_picture_url?: string }) => {
+  await setAuthToken();
+  
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  if (userError || !user) throw new Error('User not authenticated');
+  
+  const { data, error } = await supabase
+    .from('user_profiles')
+    .update(updates)
+    .eq('id', user.id)
+    .select()
+    .single();
+  
+  if (error) throw new Error(error.message);
+  return data;
+};
+
+export const uploadProfilePicture = async (file: File) => {
+  await setAuthToken();
+  
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  if (userError || !user) throw new Error('User not authenticated');
+  
+  // Generate unique filename
+  const fileExt = file.name.split('.').pop();
+  const fileName = `${user.id}/profile.${fileExt}`;
+  
+  // Upload to Supabase Storage
+  const { data, error } = await supabase.storage
+    .from('avatar-pictures')
+    .upload(fileName, file, {
+      cacheControl: '3600',
+      upsert: true // Replace existing file
+    });
+  
+  if (error) throw new Error(error.message);
+  
+  // Get public URL
+  const { data: { publicUrl } } = supabase.storage
+    .from('avatar-pictures')
+    .getPublicUrl(fileName);
+  
+  // Update user profile with new picture URL
+  await updateUserProfile({ profile_picture_url: publicUrl });
+  
+  return { url: publicUrl, path: data.path };
+};
+
+export const deleteProfilePicture = async () => {
+  await setAuthToken();
+  
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  if (userError || !user) throw new Error('User not authenticated');
+  
+  // Get current profile to find existing picture
+  const profile = await getUserProfile();
+  
+  if (profile.profile_picture_url) {
+    // Extract file path from URL
+    const fileName = `${user.id}/profile.${profile.profile_picture_url.split('.').pop()}`;
+    
+    // Delete from storage
+    const { error } = await supabase.storage
+      .from('avatar-pictures')
+      .remove([fileName]);
+    
+    if (error) console.warn('Error deleting file from storage:', error);
+  }
+  
+  // Update profile to remove picture URL
+  await updateUserProfile({ profile_picture_url: null });
+  
+  return { success: true };
+};

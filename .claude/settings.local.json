@@ -24,7 +24,10 @@
       "Bash(npm run azure:build:*)",
       "Bash(npm run azure:start:*)",
       "Bash(az vm list-skus:*)",
-      "Bash(vercel link:*)"
+      "Bash(vercel link:*)",
+      "WebSearch",
+      "Bash(npx:*)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []
