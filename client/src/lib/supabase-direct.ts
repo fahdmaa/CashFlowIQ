@@ -824,11 +824,16 @@ export const getUserProfile = async () => {
   return data;
 };
 
-export const updateUserProfile = async (updates: { username?: string; profile_picture_url?: string }) => {
+export const updateUserProfile = async (updates: { username?: string; profile_picture_url?: string | null }) => {
   await setAuthToken();
   
   const { data: { user }, error: userError } = await supabase.auth.getUser();
-  if (userError || !user) throw new Error('User not authenticated');
+  if (userError || !user) {
+    console.error('User authentication failed:', userError);
+    throw new Error('User not authenticated');
+  }
+  
+  console.log('Updating user profile for user:', user.id, 'with updates:', updates);
   
   const { data, error } = await supabase
     .from('user_profiles')
@@ -837,64 +842,124 @@ export const updateUserProfile = async (updates: { username?: string; profile_pi
     .select()
     .single();
   
-  if (error) throw new Error(error.message);
+  if (error) {
+    console.error('Profile update error:', error);
+    throw new Error(`Profile update failed: ${error.message}`);
+  }
+  
+  console.log('Profile updated successfully:', data);
   return data;
 };
 
 export const uploadProfilePicture = async (file: File) => {
-  await setAuthToken();
-  
-  const { data: { user }, error: userError } = await supabase.auth.getUser();
-  if (userError || !user) throw new Error('User not authenticated');
-  
-  // Generate unique filename
-  const fileExt = file.name.split('.').pop();
-  const fileName = `${user.id}/profile.${fileExt}`;
-  
-  // Upload to Supabase Storage
-  const { data, error } = await supabase.storage
-    .from('avatar-pictures')
-    .upload(fileName, file, {
-      cacheControl: '3600',
-      upsert: true // Replace existing file
-    });
-  
-  if (error) throw new Error(error.message);
-  
-  // Get public URL
-  const { data: { publicUrl } } = supabase.storage
-    .from('avatar-pictures')
-    .getPublicUrl(fileName);
-  
-  // Update user profile with new picture URL
-  await updateUserProfile({ profile_picture_url: publicUrl });
-  
-  return { url: publicUrl, path: data.path };
+  try {
+    await setAuthToken();
+    
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      console.error('User authentication failed:', userError);
+      throw new Error('User not authenticated');
+    }
+    
+    console.log('Starting upload for user:', user.id, 'file:', file.name);
+    
+    // Validate file
+    if (!file.type.startsWith('image/')) {
+      throw new Error('File must be an image');
+    }
+    
+    if (file.size > 5 * 1024 * 1024) { // 5MB
+      throw new Error('File size must be less than 5MB');
+    }
+    
+    // Generate unique filename with timestamp to avoid caching issues
+    const fileExt = file.name.split('.').pop();
+    const timestamp = Date.now();
+    const fileName = `${user.id}/profile-${timestamp}.${fileExt}`;
+    
+    console.log('Uploading to storage with filename:', fileName);
+    
+    // Upload to Supabase Storage
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from('avatar-pictures')
+      .upload(fileName, file, {
+        cacheControl: '3600',
+        upsert: true // Replace existing file
+      });
+    
+    if (uploadError) {
+      console.error('Storage upload error:', uploadError);
+      throw new Error(`Upload failed: ${uploadError.message}`);
+    }
+    
+    console.log('Upload successful:', uploadData);
+    
+    // Get public URL
+    const { data: { publicUrl } } = supabase.storage
+      .from('avatar-pictures')
+      .getPublicUrl(fileName);
+    
+    console.log('Generated public URL:', publicUrl);
+    
+    // Update user profile with new picture URL
+    try {
+      const profileData = await updateUserProfile({ profile_picture_url: publicUrl });
+      console.log('Profile update successful:', profileData);
+      
+      return { url: publicUrl, path: uploadData.path };
+    } catch (profileError) {
+      console.error('Profile update failed, but upload succeeded:', profileError);
+      // Delete uploaded file if profile update fails
+      await supabase.storage.from('avatar-pictures').remove([fileName]);
+      throw profileError;
+    }
+  } catch (error) {
+    console.error('Upload process failed:', error);
+    throw error;
+  }
 };
 
 export const deleteProfilePicture = async () => {
-  await setAuthToken();
-  
-  const { data: { user }, error: userError } = await supabase.auth.getUser();
-  if (userError || !user) throw new Error('User not authenticated');
-  
-  // Get current profile to find existing picture
-  const profile = await getUserProfile();
-  
-  if (profile.profile_picture_url) {
-    // Extract file path from URL
-    const fileName = `${user.id}/profile.${profile.profile_picture_url.split('.').pop()}`;
+  try {
+    await setAuthToken();
     
-    // Delete from storage
-    const { error } = await supabase.storage
-      .from('avatar-pictures')
-      .remove([fileName]);
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      console.error('User authentication failed:', userError);
+      throw new Error('User not authenticated');
+    }
     
-    if (error) console.warn('Error deleting file from storage:', error);
+    console.log('Deleting profile picture for user:', user.id);
+    
+    // Get current profile to find existing picture
+    const profile = await getUserProfile();
+    
+    if (profile.profile_picture_url) {
+      // Extract filename from URL - handle both old and new filename formats
+      const urlParts = profile.profile_picture_url.split('/');
+      const fileName = urlParts[urlParts.length - 1];
+      const fullFileName = `${user.id}/${fileName}`;
+      
+      console.log('Deleting file from storage:', fullFileName);
+      
+      // Delete from storage
+      const { error: deleteError } = await supabase.storage
+        .from('avatar-pictures')
+        .remove([fullFileName]);
+      
+      if (deleteError) {
+        console.warn('Error deleting file from storage:', deleteError);
+        // Continue with profile update even if file deletion fails
+      }
+    }
+    
+    // Update profile to remove picture URL
+    await updateUserProfile({ profile_picture_url: null });
+    
+    console.log('Profile picture deleted successfully');
+    return { success: true };
+  } catch (error) {
+    console.error('Delete profile picture failed:', error);
+    throw error;
   }
-  
-  // Update profile to remove picture URL
-  await updateUserProfile({ profile_picture_url: null });
-  
-  return { success: true };
 };
