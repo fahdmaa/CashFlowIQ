@@ -6,12 +6,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import * as Icons from "lucide-react";
-import { Search, Calendar, Filter, Download, Plus, TrendingUp, TrendingDown, Edit, Trash2 } from "lucide-react";
+import { Search, Calendar, Filter, Download, Plus, TrendingUp, TrendingDown, Edit, Trash2, FileDown } from "lucide-react";
 import AddTransactionModal from "@/components/add-transaction-modal";
 import EditTransactionModal from "@/components/edit-transaction-modal";
 import Header from "@/components/header";
 import { directApiRequest } from "@/lib/direct-query-client";
 import { useToast } from "@/hooks/use-toast";
+import { transactionsToCSV, downloadCSV, generateCSVFilename } from "@/lib/export-utils";
 
 // Helper function to get current salary cycle month
 const getCurrentSalaryCycleMonth = () => {
@@ -184,6 +185,36 @@ export default function Transactions() {
     }
   };
 
+  // Handle CSV export
+  const handleExportCSV = () => {
+    if (filteredTransactions.length === 0) {
+      toast({
+        title: "No data to export",
+        description: "Please adjust your filters to select transactions to export.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const csvContent = transactionsToCSV(filteredTransactions);
+      const filename = generateCSVFilename(`transactions_${selectedMonth}`);
+      downloadCSV(csvContent, filename);
+      
+      toast({
+        title: "Export successful",
+        description: `Downloaded ${filteredTransactions.length} transactions as ${filename}`,
+      });
+    } catch (error) {
+      console.error('Export failed:', error);
+      toast({
+        title: "Export failed",
+        description: "An error occurred while exporting transactions.",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (transactionsLoading) {
     return (
       <div className="min-h-screen bg-background">
@@ -340,8 +371,14 @@ export default function Transactions() {
                   </SelectContent>
                 </Select>
                 
-                <Button variant="outline" size="icon" className="transition-all hover:scale-105">
-                  <Download className="h-4 w-4" />
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  className="transition-all hover:scale-105"
+                  onClick={handleExportCSV}
+                  title="Export to CSV"
+                >
+                  <FileDown className="h-4 w-4" />
                 </Button>
               </div>
             </div>
