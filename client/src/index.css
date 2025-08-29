@@ -4,42 +4,42 @@
 @tailwind utilities;
 
 :root {
-  --background: hsl(226 22% 97%);
-  --foreground: hsl(214 14% 16%);
+  --background: hsl(0 0% 98%);
+  --foreground: hsl(220 25% 15%);
   --card: hsl(0 0% 100%);
-  --card-foreground: hsl(214 14% 16%);
+  --card-foreground: hsl(220 25% 15%);
   --popover: hsl(0 0% 100%);
-  --popover-foreground: hsl(214 14% 16%);
-  --primary: hsl(217 100% 51%);
+  --popover-foreground: hsl(220 25% 15%);
+  --primary: hsl(211 100% 47%);
   --primary-foreground: hsl(0 0% 100%);
-  --secondary: hsl(33 100% 50%);
-  --secondary-foreground: hsl(0 0% 100%);
-  --muted: hsl(210 14% 63%);
-  --muted-foreground: hsl(210 14% 43%);
-  --accent: hsl(140 50% 52%);
-  --accent-foreground: hsl(0 0% 100%);
-  --destructive: hsl(3 100% 59%);
+  --secondary: hsl(206 89% 65%);
+  --secondary-foreground: hsl(220 25% 15%);
+  --muted: hsl(213 16% 92%);
+  --muted-foreground: hsl(215 15% 45%);
+  --accent: hsl(206 92% 90%);
+  --accent-foreground: hsl(211 100% 40%);
+  --destructive: hsl(349 75% 51%);
   --destructive-foreground: hsl(0 0% 100%);
-  --border: hsl(210 14% 63%);
-  --input: hsl(226 22% 97%);
-  --ring: hsl(217 100% 51%);
-  --warning: hsl(33 100% 50%);
+  --border: hsl(214 20% 90%);
+  --input: hsl(0 0% 98%);
+  --ring: hsl(211 100% 47%);
+  --warning: hsl(38 92% 50%);
   --warning-foreground: hsl(0 0% 100%);
-  --success: hsl(140 50% 52%);
+  --success: hsl(160 84% 39%);
   --success-foreground: hsl(0 0% 100%);
-  --chart-1: hsl(217 100% 51%);
-  --chart-2: hsl(140 50% 52%);
-  --chart-3: hsl(33 100% 50%);
-  --chart-4: hsl(3 100% 59%);
-  --chart-5: hsl(210 14% 63%);
-  --sidebar: hsl(226 22% 97%);
-  --sidebar-foreground: hsl(214 14% 16%);
-  --sidebar-primary: hsl(217 100% 51%);
+  --chart-1: hsl(211 100% 47%);
+  --chart-2: hsl(206 89% 65%);
+  --chart-3: hsl(199 89% 48%);
+  --chart-4: hsl(206 92% 75%);
+  --chart-5: hsl(213 16% 82%);
+  --sidebar: hsl(0 0% 98%);
+  --sidebar-foreground: hsl(220 25% 15%);
+  --sidebar-primary: hsl(211 100% 47%);
   --sidebar-primary-foreground: hsl(0 0% 100%);
-  --sidebar-accent: hsl(140 50% 52%);
-  --sidebar-accent-foreground: hsl(0 0% 100%);
-  --sidebar-border: hsl(210 14% 63%);
-  --sidebar-ring: hsl(217 100% 51%);
+  --sidebar-accent: hsl(206 92% 90%);
+  --sidebar-accent-foreground: hsl(211 100% 40%);
+  --sidebar-border: hsl(214 20% 90%);
+  --sidebar-ring: hsl(211 100% 47%);
   --font-sans: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
   --font-serif: Georgia, serif;
   --font-mono: Menlo, monospace;
@@ -47,28 +47,28 @@
 }
 
 .dark {
-  --background: hsl(214 14% 10%);
-  --foreground: hsl(210 14% 89%);
-  --card: hsl(214 14% 14%);
-  --card-foreground: hsl(210 14% 89%);
-  --popover: hsl(214 14% 14%);
-  --popover-foreground: hsl(210 14% 89%);
-  --primary: hsl(217 100% 61%);
-  --primary-foreground: hsl(214 14% 10%);
-  --secondary: hsl(33 100% 60%);
-  --secondary-foreground: hsl(214 14% 10%);
-  --muted: hsl(210 14% 33%);
-  --muted-foreground: hsl(210 14% 63%);
-  --accent: hsl(140 50% 42%);
-  --accent-foreground: hsl(214 14% 10%);
-  --destructive: hsl(3 100% 59%);
+  --background: hsl(220 20% 8%);
+  --foreground: hsl(210 20% 92%);
+  --card: hsl(220 20% 12%);
+  --card-foreground: hsl(210 20% 92%);
+  --popover: hsl(220 20% 12%);
+  --popover-foreground: hsl(210 20% 92%);
+  --primary: hsl(211 100% 60%);
+  --primary-foreground: hsl(220 20% 8%);
+  --secondary: hsl(206 89% 70%);
+  --secondary-foreground: hsl(220 20% 8%);
+  --muted: hsl(215 15% 25%);
+  --muted-foreground: hsl(215 15% 65%);
+  --accent: hsl(211 100% 20%);
+  --accent-foreground: hsl(206 92% 85%);
+  --destructive: hsl(349 75% 51%);
   --destructive-foreground: hsl(0 0% 100%);
-  --border: hsl(210 14% 23%);
-  --input: hsl(210 14% 23%);
-  --ring: hsl(217 100% 61%);
-  --warning: hsl(33 100% 60%);
-  --warning-foreground: hsl(214 14% 10%);
-  --success: hsl(140 50% 42%);
+  --border: hsl(215 15% 20%);
+  --input: hsl(215 15% 20%);
+  --ring: hsl(211 100% 60%);
+  --warning: hsl(38 92% 55%);
+  --warning-foreground: hsl(220 20% 8%);
+  --success: hsl(160 84% 42%);
   --success-foreground: hsl(0 0% 100%);
 }
 
@@ -84,23 +84,23 @@
 }
 
 .budget-primary {
-  background-color: hsl(217 100% 51%);
+  background-color: hsl(211 100% 47%);
 }
 
 .budget-secondary {
-  background-color: hsl(140 50% 52%);
+  background-color: hsl(206 89% 65%);
 }
 
 .budget-warning {
-  background-color: hsl(33 100% 50%);
+  background-color: hsl(38 92% 50%);
 }
 
 .budget-danger {
-  background-color: hsl(3 100% 59%);
+  background-color: hsl(349 75% 51%);
 }
 
 .gradient-bg {
-  background: linear-gradient(135deg, hsl(217 100% 51%) 0%, hsl(140 50% 52%) 100%);
+  background: linear-gradient(135deg, hsl(211 100% 47%) 0%, hsl(206 89% 65%) 100%);
 }
 
 .insight-badge {
@@ -114,7 +114,7 @@
   right: -2px;
   width: 8px;
   height: 8px;
-  background: hsl(3 100% 59%);
+  background: hsl(349 75% 51%);
   border-radius: 50%;
   border: 2px solid hsl(0 0% 100%);
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
