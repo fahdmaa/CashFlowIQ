@@ -119,7 +119,7 @@ export default function SupabaseLogin() {
           <div className="flex justify-center">
             <Logo size="xl" alt="CashFlowIQ Logo" />
           </div>
-          <CardTitle className="text-2xl text-center">Welcome to CashFlowIQ</CardTitle>
+          <CardTitle className="text-2xl text-center">Track App, Your finances, Always on track.</CardTitle>
           <CardDescription className="text-center">
             Sign in to your account or create a new one
           </CardDescription>
