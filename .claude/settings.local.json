@@ -27,7 +27,10 @@
       "Bash(vercel link:*)",
       "WebSearch",
       "Bash(npx:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(git log:*)",
+      "Bash(npm run lint)",
+      "Bash(git reset:*)"
     ],
     "deny": [],
     "ask": []
