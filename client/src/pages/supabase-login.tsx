@@ -27,6 +27,7 @@ export default function SupabaseLogin() {
   
   // Authentication success state
   const [showAuthSuccess, setShowAuthSuccess] = useState(false);
+  const [isSignupSuccess, setIsSignupSuccess] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,11 +58,11 @@ export default function SupabaseLogin() {
     try {
       await signUp(signupEmail, signupPassword, signupUsername);
       
-      // Show authentication success animation for signup too
+      // Show signup success message (email confirmation needed)
+      setIsSignupSuccess(true);
       setShowAuthSuccess(true);
       
-      // Navigate after showing success animation
-      setTimeout(() => navigate("/"), 1200);
+      // Don't auto-navigate for signup - user needs to confirm email first
     } catch (err) {
       setSignupError(err instanceof Error ? err.message : "Signup failed");
       setIsSignupLoading(false);
@@ -82,12 +83,29 @@ export default function SupabaseLogin() {
               </div>
             </div>
             <CardTitle className="text-2xl text-center text-green-600 animate-fade-in">
-              Authenticated Successfully!
+              {isSignupSuccess ? "Account Created!" : "Authenticated Successfully!"}
             </CardTitle>
             <CardDescription className="text-center animate-fade-in-delayed">
-              Welcome back! Redirecting to your dashboard...
+              {isSignupSuccess 
+                ? "Please check your email and click the confirmation link to complete your registration."
+                : "Welcome back! Redirecting to your dashboard..."
+              }
             </CardDescription>
           </CardHeader>
+          {isSignupSuccess && (
+            <CardContent className="pt-0">
+              <Button 
+                className="w-full" 
+                variant="outline"
+                onClick={() => {
+                  setShowAuthSuccess(false);
+                  setIsSignupSuccess(false);
+                }}
+              >
+                Back to Login
+              </Button>
+            </CardContent>
+          )}
         </Card>
       </div>
     );

@@ -37,21 +37,28 @@ export const signUp = async (email: string, password: string, username: string):
     throw new Error("Failed to create account");
   }
 
-  // Store auth token
+  // If email confirmation is required, there will be no session until confirmed
   if (data.session) {
+    // User is immediately confirmed (email confirmation disabled)
     localStorage.setItem("authToken", data.session.access_token);
     localStorage.setItem("refreshToken", data.session.refresh_token);
+    
+    const user = {
+      id: data.user.id,
+      username: username,
+      email: email
+    };
+    localStorage.setItem("currentUser", JSON.stringify(user));
+    return user;
+  } else {
+    // Email confirmation is required
+    // Return user info without storing tokens
+    return {
+      id: data.user.id,
+      username: username,
+      email: email
+    };
   }
-
-  const user = {
-    id: data.user.id,
-    username: username,
-    email: email
-  };
-
-  localStorage.setItem("currentUser", JSON.stringify(user));
-  
-  return user;
 };
 
 export const login = async (email: string, password: string): Promise<User> => {
