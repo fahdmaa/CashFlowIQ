@@ -128,12 +128,13 @@ export default function ProfilePictureUpload({
         </div>
       </div>
 
-      <div className="flex space-x-2">
+      <div className="flex flex-col space-y-2">
         <Button 
           variant="outline" 
           size={size === "lg" ? "default" : "sm"}
           onClick={triggerFileSelect}
           disabled={isUploading || isDeleting}
+          className="hover:bg-primary hover:text-primary-foreground hover:border-primary"
         >
           {isUploading ? (
             <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -149,6 +150,7 @@ export default function ProfilePictureUpload({
             size={size === "lg" ? "default" : "sm"}
             onClick={handleDelete}
             disabled={isUploading || isDeleting}
+            className="hover:bg-destructive hover:text-destructive-foreground hover:border-destructive"
           >
             {isDeleting ? (
               <Loader2 className="h-4 w-4 animate-spin mr-2" />
