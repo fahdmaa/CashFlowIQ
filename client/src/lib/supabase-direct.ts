@@ -825,15 +825,33 @@ export const getUserProfile = async () => {
 };
 
 export const updateUserProfile = async (updates: { username?: string; profile_picture_url?: string | null }) => {
+  console.log('========== USER PROFILE UPDATE DEBUG START ==========');
+  console.log('updateUserProfile called with updates:', updates);
+  
+  console.log('Step 1: Setting auth token for profile update...');
   await setAuthToken();
   
+  console.log('Step 2: Getting user for profile update...');
   const { data: { user }, error: userError } = await supabase.auth.getUser();
+  console.log('User auth result for profile update:', {
+    hasUser: !!user,
+    userId: user?.id || 'No ID',
+    userError: userError?.message || 'No error'
+  });
+  
   if (userError || !user) {
-    console.error('User authentication failed:', userError);
+    console.error('❌ User authentication failed in updateUserProfile:', userError);
     throw new Error('User not authenticated');
   }
   
-  console.log('Updating user profile for user:', user.id, 'with updates:', updates);
+  console.log('Step 3: Authenticated user for profile update:', user.id);
+  console.log('Step 4: Attempting database update with:', {
+    table: 'user_profiles',
+    updates: updates,
+    whereClause: `id = ${user.id}`,
+    selectAll: true,
+    returnSingle: true
+  });
   
   const { data, error } = await supabase
     .from('user_profiles')
@@ -842,34 +860,105 @@ export const updateUserProfile = async (updates: { username?: string; profile_pi
     .select()
     .single();
   
+  console.log('Step 5: Database update result:', {
+    success: !error,
+    data: data,
+    error: error
+  });
+  
   if (error) {
-    console.error('Profile update error:', error);
+    console.error('❌ DATABASE UPDATE ERROR IN updateUserProfile ❌');
+    console.error('Full error object:', error);
+    console.error('Error breakdown:', {
+      message: error.message,
+      code: error.code,
+      details: error.details || 'No details',
+      hint: error.hint || 'No hint'
+    });
+    
+    // Check if it's a RLS error specifically
+    if (error.message?.includes('row level security') || 
+        error.message?.includes('policy') || 
+        error.message?.includes('RLS')) {
+      console.error('❌ THIS IS A USER_PROFILES TABLE RLS POLICY ERROR ❌');
+      console.error('The user_profiles table RLS policy is blocking the update');
+      console.error('User ID being used:', user.id);
+      console.error('Updates being applied:', updates);
+    }
+    
+    // Check if it's a table/column issue
+    if (error.message?.includes('column') || error.message?.includes('table')) {
+      console.error('❌ THIS IS A TABLE/COLUMN STRUCTURE ERROR ❌');
+      console.error('The user_profiles table may be missing the profile_picture_url column');
+    }
+    
     throw new Error(`Profile update failed: ${error.message}`);
   }
   
-  console.log('Profile updated successfully:', data);
+  console.log('✅ Profile updated successfully in database:', data);
+  console.log('========== USER PROFILE UPDATE DEBUG SUCCESS ==========');
   return data;
 };
 
 export const uploadProfilePicture = async (file: File) => {
   try {
+    console.log('========== PROFILE PICTURE UPLOAD DEBUG START ==========');
     console.log('Starting profile picture upload process...');
+    console.log('File details:', {
+      name: file.name,
+      size: file.size,
+      type: file.type,
+      lastModified: file.lastModified
+    });
     
     // Ensure we have a valid session
+    console.log('Step 1: Setting auth token...');
     await setAuthToken();
     
     // Wait a moment for auth session to be properly set
+    console.log('Step 2: Waiting for auth session to stabilize...');
     await new Promise(resolve => setTimeout(resolve, 100));
     
+    // Get current session info for debugging
+    console.log('Step 3: Checking current session...');
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    console.log('Current session details:', {
+      hasSession: !!session,
+      sessionError: sessionError,
+      accessToken: session?.access_token ? 'Present' : 'Missing',
+      refreshToken: session?.refresh_token ? 'Present' : 'Missing',
+      userId: session?.user?.id || 'No user ID',
+      userEmail: session?.user?.email || 'No email'
+    });
+    
+    if (sessionError) {
+      console.error('Session error:', sessionError);
+      throw new Error(`Session error: ${sessionError.message}`);
+    }
+    
+    if (!session) {
+      console.error('No active session found');
+      throw new Error('No active session found');
+    }
+    
+    console.log('Step 4: Getting authenticated user...');
     const { data: { user }, error: userError } = await supabase.auth.getUser();
+    console.log('User authentication result:', {
+      hasUser: !!user,
+      userId: user?.id || 'No ID',
+      userEmail: user?.email || 'No email',
+      userError: userError?.message || 'No error'
+    });
+    
     if (userError || !user) {
       console.error('User authentication failed:', userError);
       throw new Error('User not authenticated');
     }
     
-    console.log('User authenticated successfully:', user.id);
+    console.log('Step 5: User authenticated successfully with ID:', user.id);
     
     // Validate file
+    console.log('Step 6: Validating file...');
     if (!file.type.startsWith('image/')) {
       throw new Error('File must be an image');
     }
@@ -883,20 +972,23 @@ export const uploadProfilePicture = async (file: File) => {
     const timestamp = Date.now();
     const fileName = `${user.id}/profile-${timestamp}.${fileExt}`;
     
-    console.log('Uploading file:', file.name, 'as:', fileName);
-    console.log('File details:', {
-      size: file.size,
-      type: file.type,
-      name: file.name
+    console.log('Step 7: Generated filename:', fileName);
+    console.log('Path structure check:', {
+      userId: user.id,
+      userIdType: typeof user.id,
+      userIdLength: user.id.length,
+      fullPath: fileName,
+      pathParts: fileName.split('/')
     });
     
-    // Double-check current session before upload
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      throw new Error('No active session found');
-    }
-    
-    console.log('Active session found, proceeding with upload...');
+    console.log('Step 8: Attempting storage upload...');
+    console.log('Storage upload parameters:', {
+      bucket: 'avatar-pictures',
+      fileName: fileName,
+      fileSize: file.size,
+      fileType: file.type,
+      options: { cacheControl: '3600', upsert: true }
+    });
     
     // Upload to Supabase Storage
     const { data: uploadData, error: uploadError } = await supabase.storage
@@ -906,19 +998,39 @@ export const uploadProfilePicture = async (file: File) => {
         upsert: true // Replace existing file
       });
     
+    console.log('Step 9: Storage upload result:', {
+      success: !uploadError,
+      uploadData: uploadData,
+      uploadError: uploadError
+    });
+    
     if (uploadError) {
-      console.error('Storage upload error:', uploadError);
-      console.error('Error details:', {
+      console.error('❌ STORAGE UPLOAD ERROR OCCURRED HERE ❌');
+      console.error('Full error object:', uploadError);
+      console.error('Error breakdown:', {
         message: uploadError.message,
         statusCode: uploadError.statusCode,
-        error: uploadError.error
+        error: uploadError.error,
+        details: uploadError.details || 'No details',
+        hint: uploadError.hint || 'No hint'
       });
-      throw new Error(`Upload failed: ${uploadError.message}`);
+      
+      // Check if it's a RLS error specifically
+      if (uploadError.message?.includes('row level security') || 
+          uploadError.message?.includes('policy') || 
+          uploadError.message?.includes('RLS')) {
+        console.error('❌ THIS IS A STORAGE RLS POLICY ERROR ❌');
+        console.error('The error is happening during storage upload, not database update');
+      }
+      
+      throw new Error(`Storage upload failed: ${uploadError.message}`);
     }
     
-    console.log('Upload successful:', uploadData);
+    console.log('✅ Step 10: Storage upload successful!');
+    console.log('Upload data:', uploadData);
     
     // Get public URL
+    console.log('Step 11: Getting public URL...');
     const { data: { publicUrl } } = supabase.storage
       .from('avatar-pictures')
       .getPublicUrl(fileName);
@@ -926,14 +1038,34 @@ export const uploadProfilePicture = async (file: File) => {
     console.log('Generated public URL:', publicUrl);
     
     // Update user profile with new picture URL
+    console.log('Step 12: Updating user profile in database...');
+    console.log('Profile update parameters:', {
+      userId: user.id,
+      profilePictureUrl: publicUrl
+    });
+    
     try {
       const profileData = await updateUserProfile({ profile_picture_url: publicUrl });
-      console.log('Profile update successful:', profileData);
+      console.log('✅ Step 13: Profile update successful!');
+      console.log('Profile data result:', profileData);
       
+      console.log('========== PROFILE PICTURE UPLOAD DEBUG SUCCESS ==========');
       return { url: publicUrl, path: uploadData.path };
     } catch (profileError) {
+      console.error('❌ DATABASE PROFILE UPDATE ERROR OCCURRED HERE ❌');
       console.error('Profile update failed, but upload succeeded:', profileError);
+      console.error('Full profile error:', profileError);
+      
+      // Check if it's a RLS error specifically
+      if (profileError.message?.includes('row level security') || 
+          profileError.message?.includes('policy') || 
+          profileError.message?.includes('RLS')) {
+        console.error('❌ THIS IS A DATABASE RLS POLICY ERROR ❌');
+        console.error('The error is happening during profile update, not storage upload');
+      }
+      
       // Delete uploaded file if profile update fails
+      console.log('Cleaning up uploaded file due to profile update failure...');
       try {
         await supabase.storage.from('avatar-pictures').remove([fileName]);
         console.log('Cleaned up uploaded file due to profile update failure');
@@ -943,7 +1075,13 @@ export const uploadProfilePicture = async (file: File) => {
       throw profileError;
     }
   } catch (error) {
-    console.error('Upload process failed:', error);
+    console.error('========== PROFILE PICTURE UPLOAD DEBUG FAILED ==========');
+    console.error('Upload process failed at top level:', error);
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
     throw error;
   }
 };

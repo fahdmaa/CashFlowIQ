@@ -208,176 +208,77 @@ export default function Budgets() {
 
         {/* Budget Chart and List */}
         <div className="grid grid-cols-1 xl:grid-cols-5 lg:grid-cols-1 gap-8">
-          {/* Enhanced Donut Chart */}
-          <Card className="rounded-xl animate-fadeIn hover-lift transition-all xl:col-span-2 lg:col-span-1 bg-gradient-to-br from-background to-muted/30" style={{animationDelay: '500ms'}}>
+          {/* Donut Chart */}
+          <Card className="rounded-xl animate-fadeIn hover-lift transition-all xl:col-span-2 lg:col-span-1" style={{animationDelay: '500ms'}}>
             <CardHeader className="pb-4">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-xl font-semibold text-foreground">Budget Distribution</CardTitle>
-                <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
-                  <PieChart className="h-5 w-5 text-muted-foreground" />
-                </div>
+                <PieChart className="h-5 w-5 text-muted-foreground" />
               </div>
             </CardHeader>
             <CardContent>
               {!budgets || budgets.length === 0 ? (
                 <div className="h-96 flex items-center justify-center text-muted-foreground">
-                  <div className="text-center space-y-4">
-                    <PieChart className="h-16 w-16 text-muted-foreground/50 mx-auto" />
-                    <p>No budget data available</p>
-                  </div>
+                  No budget data available
                 </div>
               ) : (
-                <div className="h-96 relative animate-chartFadeIn">
-                  <ResponsiveContainer width="100%" height="100%" className="animate-donutPulse">
+                <div className="h-96 relative">
+                  <ResponsiveContainer width="100%" height="100%">
                     <RechartsChart>
-                      {/* Background ring */}
-                      <Pie
-                        data={[{ value: 100 }]}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={75}
-                        outerRadius={85}
-                        dataKey="value"
-                        stroke="none"
-                        fill="hsl(var(--muted))"
-                        className="opacity-20"
-                      />
-                      {/* Main chart */}
                       <Pie
                         data={budgets.map((budget: any) => {
                           const category = categories?.find((c: any) => c.name === budget.category);
-                          const spentPercentage = (parseFloat(budget.currentSpent) / parseFloat(budget.monthlyLimit)) * 100;
                           return {
                             name: budget.category,
                             value: parseFloat(budget.monthlyLimit),
                             spent: parseFloat(budget.currentSpent),
-                            spentPercentage: Math.min(spentPercentage, 100),
-                            color: category?.color || "#3b82f6",
-                            isOverBudget: spentPercentage > 100
+                            color: category?.color || "#3b82f6"
                           };
                         })}
                         cx="50%"
-                        cy="50%"
-                        innerRadius={90}
-                        outerRadius={150}
-                        paddingAngle={1}
+                        cy="45%"
+                        innerRadius={80}
+                        outerRadius={140}
+                        paddingAngle={2}
                         dataKey="value"
-                        startAngle={90}
-                        endAngle={450}
                       >
                         {budgets.map((budget: any, index: number) => {
                           const category = categories?.find((c: any) => c.name === budget.category);
-                          const spentPercentage = (parseFloat(budget.currentSpent) / parseFloat(budget.monthlyLimit)) * 100;
-                          const isOverBudget = spentPercentage > 100;
-                          
                           return (
                             <Cell 
                               key={`cell-${index}`} 
-                              fill={`url(#gradient-${index})`}
-                              stroke={isOverBudget ? "#ef4444" : "hsl(var(--background))"}
-                              strokeWidth={isOverBudget ? 2 : 1}
-                              className="chart-segment hover:brightness-110 transition-all duration-300 cursor-pointer drop-shadow-sm"
-                              style={{
-                                filter: isOverBudget ? 'drop-shadow(0 0 8px rgba(239, 68, 68, 0.3))' : 'none',
-                                animationDelay: `${index * 200}ms`
-                              }}
+                              fill={category?.color || "#3b82f6"}
+                              className="hover:opacity-80 transition-opacity cursor-pointer"
                             />
                           );
                         })}
                       </Pie>
-                      <defs>
-                        {budgets.map((budget: any, index: number) => {
-                          const category = categories?.find((c: any) => c.name === budget.category);
-                          const baseColor = category?.color || "#3b82f6";
-                          
-                          return (
-                            <linearGradient key={`gradient-${index}`} id={`gradient-${index}`} x1="0%" y1="0%" x2="100%" y2="100%">
-                              <stop offset="0%" stopColor={baseColor} stopOpacity="0.9" />
-                              <stop offset="100%" stopColor={baseColor} stopOpacity="0.6" />
-                            </linearGradient>
-                          );
-                        })}
-                      </defs>
                       <Tooltip 
-                        formatter={(value: any, name: any, props: any) => {
-                          const budget = budgets.find((b: any) => b.category === name);
-                          const spentPercentage = ((parseFloat(budget?.currentSpent || 0) / parseFloat(budget?.monthlyLimit || 1)) * 100).toFixed(1);
-                          return [
-                            <div key="tooltip-content" className="space-y-1">
-                              <div className="font-semibold text-sm">{formatCurrency(value)} budgeted</div>
-                              <div className="text-xs text-muted-foreground">
-                                {formatCurrency(budget?.currentSpent || 0)} spent ({spentPercentage}%)
-                              </div>
-                              <div className="text-xs text-primary">
-                                {formatCurrency(parseFloat(budget?.monthlyLimit || 0) - parseFloat(budget?.currentSpent || 0))} remaining
-                              </div>
-                            </div>
-                          ];
-                        }}
+                        formatter={(value: any) => formatCurrency(value)}
                         contentStyle={{
                           backgroundColor: 'var(--background)',
                           border: '1px solid var(--border)',
-                          borderRadius: '12px',
-                          boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
-                          backdropFilter: 'blur(8px)'
+                          borderRadius: '8px',
                         }}
-                        labelStyle={{ display: 'none' }}
+                      />
+                      <Legend 
+                        verticalAlign="bottom" 
+                        height={50}
+                        formatter={(value: any) => {
+                          const budget = budgets.find((b: any) => b.category === value);
+                          const percentage = ((parseFloat(budget.monthlyLimit) / totals.totalBudget) * 100).toFixed(0);
+                          return `${value} (${percentage}%)`;
+                        }}
                       />
                     </RechartsChart>
                   </ResponsiveContainer>
                   
-                  {/* Enhanced center content */}
+                  {/* Center text */}
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <div className="text-center space-y-2">
-                      <div className="space-y-1">
-                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Total Budget</p>
-                        <p className="text-2xl font-bold text-foreground tracking-tight">{formatCurrency(totals.totalBudget)}</p>
-                      </div>
-                      <div className="w-12 h-0.5 bg-primary/30 mx-auto rounded-full"></div>
-                      <div className="space-y-1">
-                        <p className="text-xs font-medium text-muted-foreground">Spent</p>
-                        <p className="text-lg font-semibold text-primary">{formatCurrency(totals.totalSpent)}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {overallProgress.toFixed(1)}% used
-                        </p>
-                      </div>
-                      {totals.budgetsOverLimit > 0 && (
-                        <div className="flex items-center justify-center space-x-1 pt-2">
-                          <AlertTriangle className="h-3 w-3 text-destructive" />
-                          <span className="text-xs text-destructive font-medium">
-                            {totals.budgetsOverLimit} over budget
-                          </span>
-                        </div>
-                      )}
+                    <div className="text-center mt-[-50px]">
+                      <p className="text-xs text-muted-foreground">Total Budget</p>
+                      <p className="text-lg font-bold text-foreground">{formatCurrency(totals.totalBudget)}</p>
                     </div>
-                  </div>
-
-                  {/* Animated legend */}
-                  <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 flex flex-wrap justify-center gap-3 pointer-events-none">
-                    {budgets.slice(0, 4).map((budget: any, index: number) => {
-                      const category = categories?.find((c: any) => c.name === budget.category);
-                      const percentage = ((parseFloat(budget.monthlyLimit) / totals.totalBudget) * 100).toFixed(0);
-                      const spentPercentage = (parseFloat(budget.currentSpent) / parseFloat(budget.monthlyLimit)) * 100;
-                      
-                      return (
-                        <div 
-                          key={budget.id} 
-                          className="flex items-center space-x-2 text-xs animate-fadeIn"
-                          style={{animationDelay: `${600 + index * 100}ms`}}
-                        >
-                          <div 
-                            className="w-2 h-2 rounded-full border border-white/20" 
-                            style={{
-                              backgroundColor: category?.color || "#3b82f6",
-                              boxShadow: spentPercentage > 100 ? '0 0 8px rgba(239, 68, 68, 0.5)' : 'none'
-                            }}
-                          />
-                          <span className="font-medium text-foreground">{budget.category}</span>
-                          <span className="text-muted-foreground">({percentage}%)</span>
-                        </div>
-                      );
-                    })}
                   </div>
                 </div>
               )}

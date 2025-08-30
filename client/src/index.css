@@ -183,34 +183,6 @@
   }
 }
 
-@keyframes chartDraw {
-  from {
-    stroke-dashoffset: 100;
-  }
-  to {
-    stroke-dashoffset: 0;
-  }
-}
-
-@keyframes chartFadeIn {
-  from {
-    opacity: 0;
-    transform: scale(0.8) rotate(-10deg);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1) rotate(0deg);
-  }
-}
-
-@keyframes donutPulse {
-  0%, 100% {
-    filter: brightness(1) drop-shadow(0 0 0 rgba(0,0,0,0));
-  }
-  50% {
-    filter: brightness(1.1) drop-shadow(0 0 20px rgba(59, 130, 246, 0.3));
-  }
-}
 
 .animate-fadeIn {
   animation: fadeIn 0.5s ease-out;
@@ -228,28 +200,7 @@
   animation: slideInLeft 0.4s ease-out;
 }
 
-.animate-chartFadeIn {
-  animation: chartFadeIn 0.8s ease-out;
-}
 
-.animate-donutPulse {
-  animation: donutPulse 3s ease-in-out infinite;
-}
-
-/* Enhanced chart styles */
-.recharts-wrapper {
-  filter: drop-shadow(0 4px 20px rgba(0,0,0,0.08));
-}
-
-.chart-segment {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  transform-origin: center;
-}
-
-.chart-segment:hover {
-  transform: scale(1.05);
-  filter: brightness(1.15) drop-shadow(0 8px 25px rgba(0,0,0,0.15));
-}
 
 .animate-pulse {
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
