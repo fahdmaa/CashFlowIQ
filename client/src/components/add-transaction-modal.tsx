@@ -81,6 +81,26 @@ export default function AddTransactionModal({ isOpen, onClose }: AddTransactionM
 
   const createTransactionMutation = useMutation({
     mutationFn: async (data: TransactionForm) => {
+      // Normalize amount strings like "28", "28.00", "28,00", "28 DH"
+      const normalizeAmount = (input: string | number): number => {
+        if (typeof input === 'number') {
+          return Number.isFinite(input) ? input : NaN;
+        }
+        let s = (input || '').toString().trim().toLowerCase();
+        // Replace comma with dot if no dot exists; otherwise drop commas (likely thousands separator)
+        if (s.includes(',') && !s.includes('.')) s = s.replace(/,/g, '.');
+        else s = s.replace(/,/g, '');
+        // Remove everything except digits, dot and minus
+        s = s.replace(/[^0-9.\-]/g, '');
+        // If multiple dots, keep the first
+        const firstDot = s.indexOf('.');
+        if (firstDot !== -1) {
+          s = s.slice(0, firstDot + 1) + s.slice(firstDot + 1).replace(/\./g, '');
+        }
+        const val = parseFloat(s);
+        return Number.isFinite(val) ? val : NaN;
+      };
+
       // Normalize DD/MM/YYYY or YYYY-MM-DD to ISO (UTC midnight)
       const normalizeDate = (input: string) => {
         // If already ISO-like, trust it
@@ -95,15 +115,29 @@ export default function AddTransactionModal({ isOpen, onClose }: AddTransactionM
           const y = parseInt(yyyy, 10);
           const mon = parseInt(mm, 10);
           const day = parseInt(dd, 10);
-          return new Date(Date.UTC(y, mon - 1, day)).toISOString();
+          // Basic validity checks
+          if (mon < 1 || mon > 12 || day < 1 || day > 31) {
+            throw new Error('Invalid date format. Use DD/MM/YYYY.');
+          }
+          const dt = new Date(Date.UTC(y, mon - 1, day));
+          // Ensure date parts round-trip correctly (e.g., invalid 31/02)
+          if (dt.getUTCFullYear() !== y || dt.getUTCMonth() !== mon - 1 || dt.getUTCDate() !== day) {
+            throw new Error('Invalid calendar date.');
+          }
+          return dt.toISOString();
         }
         // Fallback
         return new Date(input).toISOString();
       };
 
+      const amountNumber = normalizeAmount(data.amount);
+      if (!Number.isFinite(amountNumber)) {
+        throw new Error('Amount must be a valid number (e.g., 28 or 28.00).');
+      }
+
       return await directApiRequest("POST", "/api/transactions", {
         ...data,
-        amount: parseFloat(data.amount),
+        amount: amountNumber,
         date: normalizeDate(data.date),
       });
     },
