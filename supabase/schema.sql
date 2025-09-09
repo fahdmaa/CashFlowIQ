@@ -293,9 +293,9 @@ begin
           new.user_id,
           'warning',
           'Budget Exceeded',
-          format('You''ve exceeded your %s budget by DH%.2f this month.', 
-                 new.category, 
-                 budget_record.current_spent - budget_record.monthly_limit),
+          'You''ve exceeded your ' || new.category || ' budget by DH' ||
+          to_char(budget_record.current_spent - budget_record.monthly_limit, 'FM999999990.00') ||
+          ' this month.',
           new.category,
           false
         );
@@ -306,9 +306,7 @@ begin
           new.user_id,
           'warning',
           'Budget Alert',
-          format('You''ve used %.0f%% of your %s budget this month.', 
-                 spent_percentage, 
-                 new.category),
+          'You''ve used ' || to_char(spent_percentage, 'FM999990') || '% of your ' || new.category || ' budget this month.',
           new.category,
           false
         );

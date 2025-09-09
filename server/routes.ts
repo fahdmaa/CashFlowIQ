@@ -216,12 +216,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const transactions = await storage.getTransactionsByDateRange(req.user!.id, startDate, endDate);
       const expenseTransactions = transactions.filter(t => t.type === "expense");
       
-      // Group by date
+      // Group by date within range, initialize to 0 to avoid missing days
       const dailySpending = new Map<string, number>();
+      for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+        const key = new Date(d).toISOString().split('T')[0];
+        dailySpending.set(key, 0);
+      }
       expenseTransactions.forEach(transaction => {
-        const date = new Date(transaction.date).toISOString().split('T')[0];
-        const current = dailySpending.get(date) || 0;
-        dailySpending.set(date, current + parseFloat(transaction.amount));
+        const key = new Date(transaction.date).toISOString().split('T')[0];
+        const current = dailySpending.get(key) || 0;
+        dailySpending.set(key, current + parseFloat(transaction.amount));
       });
 
       res.json(Object.fromEntries(dailySpending));

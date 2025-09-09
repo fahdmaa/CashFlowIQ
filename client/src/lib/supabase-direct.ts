@@ -85,6 +85,21 @@ export const createTransaction = async (transaction: any) => {
   const { data: { user }, error: userError } = await supabase.auth.getUser();
   if (userError || !user) throw new Error('User not authenticated');
   
+  // Normalize date input (support DD/MM/YYYY or ISO/Date)
+  const normalizeDate = (input: string | Date) => {
+    if (input instanceof Date) return input.toISOString();
+    if (/^\d{4}-\d{2}-\d{2}/.test(input)) {
+      const [y, m, d] = input.split('-').map(Number);
+      return new Date(Date.UTC(y, (m || 1) - 1, d || 1)).toISOString();
+    }
+    const m = typeof input === 'string' && input.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    if (m) {
+      const [, dd, mm, yyyy] = m;
+      return new Date(Date.UTC(parseInt(yyyy,10), parseInt(mm,10)-1, parseInt(dd,10))).toISOString();
+    }
+    return new Date(input).toISOString();
+  };
+
   const { data, error } = await supabase
     .from('transactions')
     .insert([{
@@ -92,7 +107,7 @@ export const createTransaction = async (transaction: any) => {
       description: transaction.description,
       category: transaction.category,
       type: transaction.type,
-      date: new Date(transaction.date).toISOString(),
+      date: normalizeDate(transaction.date),
       user_id: user.id
     }])
     .select()
@@ -116,6 +131,21 @@ export const updateTransaction = async (transactionId: string, transaction: any)
   console.log(`User authenticated: ${user.id}, updating transaction: ${transactionId}`);
   
   // Update the transaction
+  // Normalize date input (support DD/MM/YYYY or ISO/Date)
+  const normalizeDate = (input: string | Date) => {
+    if (input instanceof Date) return input.toISOString();
+    if (/^\d{4}-\d{2}-\d{2}/.test(input)) {
+      const [y, m, d] = input.split('-').map(Number);
+      return new Date(Date.UTC(y, (m || 1) - 1, d || 1)).toISOString();
+    }
+    const m = typeof input === 'string' && input.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    if (m) {
+      const [, dd, mm, yyyy] = m;
+      return new Date(Date.UTC(parseInt(yyyy,10), parseInt(mm,10)-1, parseInt(dd,10))).toISOString();
+    }
+    return new Date(input).toISOString();
+  };
+
   const { data, error } = await supabase
     .from('transactions')
     .update({
@@ -123,7 +153,7 @@ export const updateTransaction = async (transactionId: string, transaction: any)
       description: transaction.description,
       category: transaction.category,
       type: transaction.type,
-      date: new Date(transaction.date).toISOString(),
+      date: normalizeDate(transaction.date),
     })
     .eq('id', transactionId)
     .eq('user_id', user.id)
@@ -785,9 +815,9 @@ export const getSpendingAnalytics = async (days: number = 7, selectedMonth?: str
   // Group transactions by date and sum spending per day
   const spendingByDate: Record<string, number> = {};
   
-  // Initialize all dates in the range with 0 (in reverse chronological order, oldest first)
+  // Initialize all dates in the range with 0 (oldest -> newest), anchored to endDate
   for (let i = days - 1; i >= 0; i--) {
-    const date = new Date();
+    const date = new Date(endDate);
     date.setDate(endDate.getDate() - i);
     const dateKey = date.toISOString().split('T')[0]; // YYYY-MM-DD format
     spendingByDate[dateKey] = 0;

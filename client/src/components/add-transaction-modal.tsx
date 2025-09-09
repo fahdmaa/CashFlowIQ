@@ -81,10 +81,30 @@ export default function AddTransactionModal({ isOpen, onClose }: AddTransactionM
 
   const createTransactionMutation = useMutation({
     mutationFn: async (data: TransactionForm) => {
+      // Normalize DD/MM/YYYY or YYYY-MM-DD to ISO (UTC midnight)
+      const normalizeDate = (input: string) => {
+        // If already ISO-like, trust it
+        if (/^\d{4}-\d{2}-\d{2}/.test(input)) {
+          const [y, m, d] = input.split("-").map(Number);
+          return new Date(Date.UTC(y, (m || 1) - 1, d || 1)).toISOString();
+        }
+        // Handle DD/MM/YYYY
+        const m = input.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+        if (m) {
+          const [, dd, mm, yyyy] = m;
+          const y = parseInt(yyyy, 10);
+          const mon = parseInt(mm, 10);
+          const day = parseInt(dd, 10);
+          return new Date(Date.UTC(y, mon - 1, day)).toISOString();
+        }
+        // Fallback
+        return new Date(input).toISOString();
+      };
+
       return await directApiRequest("POST", "/api/transactions", {
         ...data,
-        amount: parseFloat(data.amount).toFixed(2),
-        date: new Date(data.date).toISOString(),
+        amount: parseFloat(data.amount),
+        date: normalizeDate(data.date),
       });
     },
     onSuccess: () => {
