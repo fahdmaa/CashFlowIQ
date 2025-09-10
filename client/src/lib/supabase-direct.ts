@@ -1,5 +1,6 @@
 import { supabase } from './supabase-auth';
 import { getAuthToken } from './supabase-auth';
+import { normalizeAmount, normalizeDateToISO } from './normalize';
 
 // Helper function to calculate salary cycle dates (27th to 26th)
 const getSalaryCycleDates = (selectedMonth?: string) => {
@@ -85,53 +86,19 @@ export const createTransaction = async (transaction: any) => {
   const { data: { user }, error: userError } = await supabase.auth.getUser();
   if (userError || !user) throw new Error('User not authenticated');
   
-  // Normalize amount input (handle 28, 28.00, 28,00, 28 DH, etc.)
-  const normalizeAmount = (input: any): number => {
-    if (typeof input === 'number') return Number.isFinite(input) ? input : NaN;
-    let s = (input ?? '').toString().trim().toLowerCase();
-    if (s.includes(',') && !s.includes('.')) s = s.replace(/,/g, '.');
-    else s = s.replace(/,/g, '');
-    s = s.replace(/[^0-9.\-]/g, '');
-    const firstDot = s.indexOf('.');
-    if (firstDot !== -1) s = s.slice(0, firstDot + 1) + s.slice(firstDot + 1).replace(/\./g, '');
-    const val = parseFloat(s);
-    return Number.isFinite(val) ? val : NaN;
-  };
-
-  // Normalize date input (support DD/MM/YYYY or ISO/Date)
-  const normalizeDate = (input: string | Date) => {
-    if (input instanceof Date) return input.toISOString();
-    if (/^\d{4}-\d{2}-\d{2}/.test(input)) {
-      const [y, m, d] = input.split('-').map(Number);
-      return new Date(Date.UTC(y, (m || 1) - 1, d || 1)).toISOString();
-    }
-    const m = typeof input === 'string' && input.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
-    if (m) {
-      const [, dd, mm, yyyy] = m;
-      const y = parseInt(yyyy, 10);
-      const mon = parseInt(mm, 10);
-      const day = parseInt(dd, 10);
-      if (mon < 1 || mon > 12 || day < 1 || day > 31) throw new Error('Invalid date format. Use DD/MM/YYYY.');
-      const dt = new Date(Date.UTC(y, mon - 1, day));
-      if (dt.getUTCFullYear() !== y || dt.getUTCMonth() !== mon - 1 || dt.getUTCDate() !== day) throw new Error('Invalid calendar date.');
-      return dt.toISOString();
-    }
-    return new Date(input).toISOString();
-  };
-
-  const amountNumber = normalizeAmount(transaction.amount);
-  if (!Number.isFinite(amountNumber)) {
+  const amountStr = normalizeAmount(transaction.amount);
+  if (!amountStr) {
     throw new Error('Amount must be a valid number (e.g., 28 or 28.00).');
   }
 
   const { data, error } = await supabase
     .from('transactions')
     .insert([{
-      amount: amountNumber,
+      amount: parseFloat(amountStr),
       description: transaction.description,
       category: transaction.category,
       type: transaction.type,
-      date: normalizeDate(transaction.date),
+      date: normalizeDateToISO(transaction.date),
       user_id: user.id
     }])
     .select()
@@ -154,53 +121,19 @@ export const updateTransaction = async (transactionId: string, transaction: any)
   
   console.log(`User authenticated: ${user.id}, updating transaction: ${transactionId}`);
   
-  // Normalize amount + date
-  const normalizeAmount = (input: any): number => {
-    if (typeof input === 'number') return Number.isFinite(input) ? input : NaN;
-    let s = (input ?? '').toString().trim().toLowerCase();
-    if (s.includes(',') && !s.includes('.')) s = s.replace(/,/g, '.');
-    else s = s.replace(/,/g, '');
-    s = s.replace(/[^0-9.\-]/g, '');
-    const firstDot = s.indexOf('.');
-    if (firstDot !== -1) s = s.slice(0, firstDot + 1) + s.slice(firstDot + 1).replace(/\./g, '');
-    const val = parseFloat(s);
-    return Number.isFinite(val) ? val : NaN;
-  };
-
-  // Normalize date input (support DD/MM/YYYY or ISO/Date)
-  const normalizeDate = (input: string | Date) => {
-    if (input instanceof Date) return input.toISOString();
-    if (/^\d{4}-\d{2}-\d{2}/.test(input)) {
-      const [y, m, d] = input.split('-').map(Number);
-      return new Date(Date.UTC(y, (m || 1) - 1, d || 1)).toISOString();
-    }
-    const m = typeof input === 'string' && input.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
-    if (m) {
-      const [, dd, mm, yyyy] = m;
-      const y = parseInt(yyyy, 10);
-      const mon = parseInt(mm, 10);
-      const day = parseInt(dd, 10);
-      if (mon < 1 || mon > 12 || day < 1 || day > 31) throw new Error('Invalid date format. Use DD/MM/YYYY.');
-      const dt = new Date(Date.UTC(y, mon - 1, day));
-      if (dt.getUTCFullYear() !== y || dt.getUTCMonth() !== mon - 1 || dt.getUTCDate() !== day) throw new Error('Invalid calendar date.');
-      return dt.toISOString();
-    }
-    return new Date(input).toISOString();
-  };
-
-  const amountNumber = normalizeAmount(transaction.amount);
-  if (!Number.isFinite(amountNumber)) {
+  const amountStr2 = normalizeAmount(transaction.amount);
+  if (!amountStr2) {
     throw new Error('Amount must be a valid number (e.g., 28 or 28.00).');
   }
 
   const { data, error } = await supabase
     .from('transactions')
     .update({
-      amount: amountNumber,
+      amount: parseFloat(amountStr2),
       description: transaction.description,
       category: transaction.category,
       type: transaction.type,
-      date: normalizeDate(transaction.date),
+      date: normalizeDateToISO(transaction.date),
     })
     .eq('id', transactionId)
     .eq('user_id', user.id)

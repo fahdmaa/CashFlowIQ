@@ -5,6 +5,7 @@ import { insertTransactionSchema, insertBudgetSchema, updateBudgetSchema, insert
 import { z } from "zod";
 import { AuthenticatedRequest } from "./types";
 import { createClient } from '@supabase/supabase-js';
+import { normalizeAmountServer, normalizeDateToISOServer, badReq } from './utils/normalize';
 
 // Initialize Supabase client and storage
 const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL!;
@@ -163,13 +164,32 @@ export async function registerSupabaseRoutes(app: Express): Promise<Server> {
 
   app.post("/api/transactions", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {
-      const validatedData = insertTransactionSchema.parse(req.body);
-      const transaction = await storage.createTransaction(req.user!.id, validatedData);
+      // Normalize and validate amount and date before schema parse
+      const raw = req.body || {};
+      const normalizedAmount = normalizeAmountServer(raw.amount);
+      if (!normalizedAmount) throw badReq('Amount must be a valid number (e.g., 28 or 28.00).');
+      const isoDate = normalizeDateToISOServer(raw.date);
+
+      if (process.env.NODE_ENV !== 'production') {
+        console.debug('[transactions:create] sanitized amount:', normalizedAmount);
+        console.debug('[transactions:create] iso date:', isoDate);
+        console.debug('[transactions:create] query: supabase.from("transactions").insert({ user_id, amount, description, category, type, date })');
+      }
+
+      const parsed = insertTransactionSchema.parse({
+        ...raw,
+        amount: normalizedAmount,
+        date: new Date(isoDate),
+      });
+
+      const transaction = await storage.createTransaction(req.user!.id, parsed);
       
       res.json(transaction);
     } catch (error) {
       if (error instanceof z.ZodError) {
         res.status(400).json({ message: "Invalid transaction data", errors: error.errors });
+      } else if ((error as any)?.status === 400) {
+        res.status(400).json({ message: (error as Error).message });
       } else {
         console.error('Error creating transaction:', error);
         res.status(500).json({ message: "Failed to create transaction" });

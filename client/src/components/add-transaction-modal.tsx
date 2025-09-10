@@ -10,6 +10,7 @@ import { insertTransactionSchema } from "@shared/schema";
 import { z } from "zod";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { directApiRequest } from "@/lib/direct-query-client";
+import { normalizeAmount, normalizeDateToISO } from "@/lib/normalize";
 import { useToast } from "@/hooks/use-toast";
 import { categorizeTransaction } from "@/lib/categorization";
 import { useState, useEffect } from "react";
@@ -81,64 +82,15 @@ export default function AddTransactionModal({ isOpen, onClose }: AddTransactionM
 
   const createTransactionMutation = useMutation({
     mutationFn: async (data: TransactionForm) => {
-      // Normalize amount strings like "28", "28.00", "28,00", "28 DH"
-      const normalizeAmount = (input: string | number): number => {
-        if (typeof input === 'number') {
-          return Number.isFinite(input) ? input : NaN;
-        }
-        let s = (input || '').toString().trim().toLowerCase();
-        // Replace comma with dot if no dot exists; otherwise drop commas (likely thousands separator)
-        if (s.includes(',') && !s.includes('.')) s = s.replace(/,/g, '.');
-        else s = s.replace(/,/g, '');
-        // Remove everything except digits, dot and minus
-        s = s.replace(/[^0-9.\-]/g, '');
-        // If multiple dots, keep the first
-        const firstDot = s.indexOf('.');
-        if (firstDot !== -1) {
-          s = s.slice(0, firstDot + 1) + s.slice(firstDot + 1).replace(/\./g, '');
-        }
-        const val = parseFloat(s);
-        return Number.isFinite(val) ? val : NaN;
-      };
-
-      // Normalize DD/MM/YYYY or YYYY-MM-DD to ISO (UTC midnight)
-      const normalizeDate = (input: string) => {
-        // If already ISO-like, trust it
-        if (/^\d{4}-\d{2}-\d{2}/.test(input)) {
-          const [y, m, d] = input.split("-").map(Number);
-          return new Date(Date.UTC(y, (m || 1) - 1, d || 1)).toISOString();
-        }
-        // Handle DD/MM/YYYY
-        const m = input.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
-        if (m) {
-          const [, dd, mm, yyyy] = m;
-          const y = parseInt(yyyy, 10);
-          const mon = parseInt(mm, 10);
-          const day = parseInt(dd, 10);
-          // Basic validity checks
-          if (mon < 1 || mon > 12 || day < 1 || day > 31) {
-            throw new Error('Invalid date format. Use DD/MM/YYYY.');
-          }
-          const dt = new Date(Date.UTC(y, mon - 1, day));
-          // Ensure date parts round-trip correctly (e.g., invalid 31/02)
-          if (dt.getUTCFullYear() !== y || dt.getUTCMonth() !== mon - 1 || dt.getUTCDate() !== day) {
-            throw new Error('Invalid calendar date.');
-          }
-          return dt.toISOString();
-        }
-        // Fallback
-        return new Date(input).toISOString();
-      };
-
-      const amountNumber = normalizeAmount(data.amount);
-      if (!Number.isFinite(amountNumber)) {
+      const amountStr = normalizeAmount(data.amount);
+      if (!amountStr) {
         throw new Error('Amount must be a valid number (e.g., 28 or 28.00).');
       }
 
       return await directApiRequest("POST", "/api/transactions", {
         ...data,
-        amount: amountNumber,
-        date: normalizeDate(data.date),
+        amount: amountStr,
+        date: normalizeDateToISO(data.date),
       });
     },
     onSuccess: () => {

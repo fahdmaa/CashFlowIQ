@@ -257,6 +257,11 @@ export class SupabaseStorage implements IStorage {
   }
 
   async createTransaction(userId: string, insertTransaction: InsertTransaction): Promise<Transaction> {
+    if (process.env.NODE_ENV !== 'production') {
+      console.debug('[supabase-storage.createTransaction] sanitized amount:', insertTransaction.amount);
+      console.debug('[supabase-storage.createTransaction] date (ISO):', insertTransaction.date.toISOString());
+      console.debug('[supabase-storage.createTransaction] query: supabase.from("transactions").insert({ user_id, amount, description, category, type, date })');
+    }
     const { data, error } = await this.supabase
       .from('transactions')
       .insert({

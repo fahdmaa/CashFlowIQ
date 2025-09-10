@@ -62,17 +62,51 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (req.method === 'POST') {
       // Create transaction
-      const { amount, description, category, type, date } = req.body;
+      const { amount, description, category, type, date } = req.body as any;
+      // Normalize amount and date on serverless path too
+      const normalizeAmount = (input: any): string => {
+        if (typeof input === 'number') return Number.isFinite(input) ? String(input) : '';
+        let s = (input ?? '').toString().trim().toLowerCase();
+        if (s.includes(',') && !s.includes('.')) s = s.replace(/,/g, '.');
+        else s = s.replace(/,/g, '');
+        s = s.replace(/[^0-9.\-]/g, '');
+        s = s.replace(/(?!^)-/g, '');
+        const firstDot = s.indexOf('.');
+        if (firstDot !== -1) s = s.slice(0, firstDot + 1) + s.slice(firstDot + 1).replace(/\./g, '');
+        const val = parseFloat(s);
+        return Number.isFinite(val) ? s : '';
+      };
+      const normalizeDateToISO = (input: string): string => {
+        if (/^\d{4}-\d{2}-\d{2}/.test(input)) {
+          const [y, m, d] = input.split('-').map(Number);
+          return new Date(Date.UTC(y, (m || 1) - 1, d || 1)).toISOString();
+        }
+        const m = input.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+        if (m) {
+          const [, dd, mm, yyyy] = m;
+          const y = parseInt(yyyy, 10);
+          const mon = parseInt(mm, 10);
+          const day = parseInt(dd, 10);
+          const dt = new Date(Date.UTC(y, mon - 1, day));
+          return dt.toISOString();
+        }
+        return new Date(input).toISOString();
+      };
+
+      const amountStr = normalizeAmount(amount);
+      if (!amountStr) {
+        return res.status(400).json({ message: 'Amount must be a valid number (e.g., 28 or 28.00).' });
+      }
 
       const { data, error } = await supabase
         .from('transactions')
         .insert([{
           user_id: userId,
-          amount: parseFloat(amount),
+          amount: parseFloat(amountStr),
           description,
           category,
           type,
-          date: new Date(date).toISOString()
+          date: normalizeDateToISO(date)
         }])
         .select()
         .single();
