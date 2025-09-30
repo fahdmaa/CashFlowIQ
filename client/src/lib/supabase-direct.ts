@@ -1250,8 +1250,13 @@ export const getFiscalMonthForDate = async (date: Date) => {
 
 // Modified helper to calculate dates based on fiscal months
 export const getFiscalCycleDates = async (selectedMonth?: string) => {
+  // ALWAYS use salary cycle dates for now - fiscal months need proper implementation
+  // The fiscal month feature should only affect FUTURE months, not past data
+  return getSalaryCycleDates(selectedMonth);
+
+  /* COMMENTED OUT - This needs to be properly implemented to not break existing data
   const { data: { user }, error: userError } = await supabase.auth.getUser();
-  if (userError || !user) return getSalaryCycleDates(selectedMonth); // Fallback to salary cycle
+  if (userError || !user) return getSalaryCycleDates(selectedMonth);
 
   // Get all fiscal months
   const { data: fiscalMonths, error } = await supabase
@@ -1265,23 +1270,31 @@ export const getFiscalCycleDates = async (selectedMonth?: string) => {
     return getSalaryCycleDates(selectedMonth);
   }
 
-  if (selectedMonth) {
-    // Find the fiscal month that matches the selected label
-    const targetMonth = fiscalMonths.find(fm => {
-      const monthDate = new Date(fm.start_date);
-      const formattedMonth = `${monthDate.getFullYear()}-${String(monthDate.getMonth() + 1).padStart(2, '0')}`;
-      return formattedMonth === selectedMonth;
-    });
+  // For any month selection, we need to check:
+  // 1. Is this month covered by a fiscal month definition?
+  // 2. If not, use salary cycle dates for that month
 
-    if (targetMonth) {
-      return {
-        startDate: new Date(targetMonth.start_date),
-        endDate: targetMonth.end_date ? new Date(targetMonth.end_date) : new Date()
-      };
+  if (selectedMonth) {
+    // Parse the selected month
+    const [year, month] = selectedMonth.split('-').map(Number);
+    const selectedDate = new Date(year, month - 1, 15); // Middle of month for comparison
+
+    // Find if this date falls within any fiscal month period
+    for (const fm of fiscalMonths) {
+      const startDate = new Date(fm.start_date);
+      const endDate = fm.end_date ? new Date(fm.end_date) : new Date();
+
+      if (selectedDate >= startDate && selectedDate <= endDate) {
+        // This month is covered by a fiscal period
+        return { startDate, endDate };
+      }
     }
+
+    // No fiscal month covers this period, use salary cycle
+    return getSalaryCycleDates(selectedMonth);
   }
 
-  // Get current active fiscal month
+  // For current month (no selection), check if we have an active fiscal month
   const activeMonth = fiscalMonths.find(fm => fm.is_active);
   if (activeMonth) {
     return {
@@ -1292,4 +1305,5 @@ export const getFiscalCycleDates = async (selectedMonth?: string) => {
 
   // Fallback to salary cycle
   return getSalaryCycleDates(selectedMonth);
+  */
 };

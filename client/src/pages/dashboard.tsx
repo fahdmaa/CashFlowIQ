@@ -103,19 +103,20 @@ export default function Dashboard() {
                 <Calendar className="h-5 w-5 text-primary" />
                 <h3 className="text-lg font-semibold text-foreground">View Data For:</h3>
               </div>
+              <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                <SelectTrigger className="w-64">
+                  <SelectValue placeholder="Select month" />
+                </SelectTrigger>
+                <SelectContent>
+                  {monthOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {/* Fiscal month button temporarily disabled - needs proper implementation
               <div className="flex items-center space-x-3">
-                <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                  <SelectTrigger className="w-64">
-                    <SelectValue placeholder="Select month" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {monthOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
                 <Button
                   onClick={() => startNewMonthMutation.mutate()}
                   disabled={startNewMonthMutation.isPending}
@@ -126,6 +127,7 @@ export default function Dashboard() {
                   <span>Start New Month</span>
                 </Button>
               </div>
+              */}
             </div>
           </CardContent>
         </Card>
