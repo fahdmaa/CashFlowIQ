@@ -1,5 +1,5 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
-import { getTransactions, createTransaction, updateTransaction, deleteTransaction, getCategories, createCategory, updateCategory, deleteCategory, deleteBudget, getOverviewAnalytics, getSpendingAnalytics, getBudgets, createBudget, updateBudget, cleanupDuplicateBudgets, cleanupOrphanedCategories } from "./supabase-direct";
+import { getTransactions, createTransaction, updateTransaction, deleteTransaction, getCategories, createCategory, updateCategory, deleteCategory, deleteBudget, getOverviewAnalytics, getSpendingAnalytics, getBudgets, createBudget, updateBudget, cleanupDuplicateBudgets, cleanupOrphanedCategories, getCurrentFiscalMonth, startNewFiscalMonth } from "./supabase-direct";
 
 // Direct Supabase query function
 const getDirectQueryFn: QueryFunction = async ({ queryKey }) => {

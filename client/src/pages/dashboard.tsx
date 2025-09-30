@@ -6,8 +6,12 @@ import RecentTransactions from "@/components/recent-transactions";
 import AddTransactionModal from "@/components/add-transaction-modal";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
-import { Calendar } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Calendar, CalendarPlus } from "lucide-react";
 import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { startNewFiscalMonth } from "@/lib/supabase-direct";
+import { useToast } from "@/hooks/use-toast";
 
 // Helper function to get current salary cycle month
 const getCurrentSalaryCycleMonth = () => {
@@ -28,10 +32,32 @@ const getCurrentSalaryCycleMonth = () => {
 
 export default function Dashboard() {
   const [isAddTransactionOpen, setIsAddTransactionOpen] = useState(false);
-  
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
   // Generate current salary cycle month as default (YYYY-MM format)
   const currentMonth = getCurrentSalaryCycleMonth();
   const [selectedMonth, setSelectedMonth] = useState(currentMonth);
+
+  // Mutation for starting a new fiscal month
+  const startNewMonthMutation = useMutation({
+    mutationFn: startNewFiscalMonth,
+    onSuccess: () => {
+      toast({
+        title: "New month started!",
+        description: "All new transactions will be recorded in the new fiscal month.",
+      });
+      // Invalidate all queries to refresh data
+      queryClient.invalidateQueries();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to start new month",
+        variant: "destructive",
+      });
+    },
+  });
   
   // Generate month options (current salary cycle month + 11 previous months)
   const generateMonthOptions = () => {
@@ -77,18 +103,29 @@ export default function Dashboard() {
                 <Calendar className="h-5 w-5 text-primary" />
                 <h3 className="text-lg font-semibold text-foreground">View Data For:</h3>
               </div>
-              <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                <SelectTrigger className="w-64">
-                  <SelectValue placeholder="Select month" />
-                </SelectTrigger>
-                <SelectContent>
-                  {monthOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex items-center space-x-3">
+                <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                  <SelectTrigger className="w-64">
+                    <SelectValue placeholder="Select month" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {monthOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  onClick={() => startNewMonthMutation.mutate()}
+                  disabled={startNewMonthMutation.isPending}
+                  variant="outline"
+                  className="flex items-center space-x-2"
+                >
+                  <CalendarPlus className="h-4 w-4" />
+                  <span>Start New Month</span>
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>

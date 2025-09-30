@@ -56,24 +56,25 @@ const setAuthToken = async () => {
 // Transactions
 export const getTransactions = async (selectedMonth?: string) => {
   await setAuthToken();
-  
+
   let query = supabase
     .from('transactions')
     .select('*')
     .order('date', { ascending: false });
-  
-  // Filter by salary cycle if month provided
+
+  // Filter by fiscal month or salary cycle if month provided
   if (selectedMonth) {
-    const { startDate, endDate } = getSalaryCycleDates(selectedMonth);
-    
-    console.log(`Filtering transactions for salary cycle from ${startDate.toISOString()} to ${endDate.toISOString()}`);
+    // Try to use fiscal months first, fallback to salary cycle
+    const fiscalDates = await getFiscalCycleDates(selectedMonth);
+
+    console.log(`Filtering transactions for fiscal cycle from ${fiscalDates.startDate.toISOString()} to ${fiscalDates.endDate.toISOString()}`);
     query = query
-      .gte('date', startDate.toISOString())
-      .lte('date', endDate.toISOString());
+      .gte('date', fiscalDates.startDate.toISOString())
+      .lte('date', fiscalDates.endDate.toISOString());
   }
-  
+
   const { data, error } = await query;
-  
+
   if (error) throw new Error(error.message);
   console.log(`Retrieved ${data?.length || 0} transactions for month: ${selectedMonth || 'all'}`);
   return data || [];
@@ -469,12 +470,13 @@ export const getBudgets = async (selectedMonth?: string) => {
   
   console.log('Raw budget data from database:', data);
   
-  // Calculate actual spending for the selected salary cycle (or current cycle if none selected)
-  const { startDate, endDate } = getSalaryCycleDates(selectedMonth);
-  
-  console.log(`Calculating spending for salary cycle from ${startDate.toISOString()} to ${endDate.toISOString()}`);
-  
-  // Get transactions for the selected salary cycle
+  // Calculate actual spending for the selected fiscal/salary cycle (or current cycle if none selected)
+  const fiscalDates = await getFiscalCycleDates(selectedMonth);
+  const { startDate, endDate } = fiscalDates;
+
+  console.log(`Calculating spending for fiscal cycle from ${startDate.toISOString()} to ${endDate.toISOString()}`);
+
+  // Get transactions for the selected fiscal/salary cycle
   const { data: transactions, error: txError } = await supabase
     .from('transactions')
     .select('amount, category, type')
@@ -697,8 +699,10 @@ export const cleanupOrphanedCategories = async () => {
 // Analytics
 export const getOverviewAnalytics = async (selectedMonth?: string) => {
   await setAuthToken();
-  
-  const { startDate, endDate } = getSalaryCycleDates(selectedMonth);
+
+  // Use fiscal months if available, otherwise fallback to salary cycle
+  const fiscalDates = await getFiscalCycleDates(selectedMonth);
+  const { startDate, endDate } = fiscalDates;
   
   const { data: transactions, error } = await supabase
     .from('transactions')
@@ -752,8 +756,9 @@ export const getSpendingAnalytics = async (days: number = 7, selectedMonth?: str
   let startDate: Date;
   
   if (selectedMonth) {
-    // Use salary cycle dates for the selected month
-    const { startDate: cycleStart, endDate: cycleEnd } = getSalaryCycleDates(selectedMonth);
+    // Use fiscal/salary cycle dates for the selected month
+    const fiscalDates = await getFiscalCycleDates(selectedMonth);
+    const { startDate: cycleStart, endDate: cycleEnd } = fiscalDates;
     
     // For spending analytics, we still want to respect the 'days' parameter within the cycle
     const cycleDays = Math.ceil((cycleEnd.getTime() - cycleStart.getTime()) / (1000 * 60 * 60 * 24));
@@ -1143,4 +1148,148 @@ export const deleteProfilePicture = async () => {
     console.error('Delete profile picture failed:', error);
     throw error;
   }
+};
+
+// Fiscal Month Management Functions
+export const getCurrentFiscalMonth = async () => {
+  await setAuthToken();
+
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  if (userError || !user) throw new Error('User not authenticated');
+
+  // Get the latest fiscal month record for the user
+  const { data, error } = await supabase
+    .from('fiscal_months')
+    .select('*')
+    .eq('user_id', user.id)
+    .order('start_date', { ascending: false })
+    .limit(1);
+
+  if (error) {
+    console.error('Error fetching fiscal month:', error);
+    // If table doesn't exist or no records, return null
+    return null;
+  }
+
+  return data?.[0] || null;
+};
+
+export const startNewFiscalMonth = async () => {
+  await setAuthToken();
+
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  if (userError || !user) throw new Error('User not authenticated');
+
+  const today = new Date();
+  const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+
+  // Close the current fiscal month if exists
+  const currentFiscalMonth = await getCurrentFiscalMonth();
+  if (currentFiscalMonth && !currentFiscalMonth.end_date) {
+    // Update the current month with an end date
+    await supabase
+      .from('fiscal_months')
+      .update({
+        end_date: today.toISOString(),
+        is_active: false
+      })
+      .eq('id', currentFiscalMonth.id);
+  }
+
+  // Create a new fiscal month starting from today
+  const { data, error } = await supabase
+    .from('fiscal_months')
+    .insert([{
+      user_id: user.id,
+      month_label: nextMonth.toLocaleDateString('en-US', { year: 'numeric', month: 'long' }),
+      start_date: today.toISOString(),
+      end_date: null, // Will be set when next month starts
+      is_active: true
+    }])
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error creating new fiscal month:', error);
+    throw new Error(error.message);
+  }
+
+  console.log('New fiscal month started:', data);
+  return data;
+};
+
+// Helper function to get fiscal month for a given date
+export const getFiscalMonthForDate = async (date: Date) => {
+  await setAuthToken();
+
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  if (userError || !user) throw new Error('User not authenticated');
+
+  // Get all fiscal months and find which one contains this date
+  const { data, error } = await supabase
+    .from('fiscal_months')
+    .select('*')
+    .eq('user_id', user.id)
+    .lte('start_date', date.toISOString())
+    .order('start_date', { ascending: false });
+
+  if (error || !data || data.length === 0) {
+    // No fiscal month found, use calendar month
+    return null;
+  }
+
+  // Find the right fiscal month
+  for (const month of data) {
+    if (!month.end_date || new Date(month.end_date) >= date) {
+      return month;
+    }
+  }
+
+  return null;
+};
+
+// Modified helper to calculate dates based on fiscal months
+export const getFiscalCycleDates = async (selectedMonth?: string) => {
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  if (userError || !user) return getSalaryCycleDates(selectedMonth); // Fallback to salary cycle
+
+  // Get all fiscal months
+  const { data: fiscalMonths, error } = await supabase
+    .from('fiscal_months')
+    .select('*')
+    .eq('user_id', user.id)
+    .order('start_date', { ascending: false });
+
+  if (error || !fiscalMonths || fiscalMonths.length === 0) {
+    // No fiscal months, use salary cycle dates
+    return getSalaryCycleDates(selectedMonth);
+  }
+
+  if (selectedMonth) {
+    // Find the fiscal month that matches the selected label
+    const targetMonth = fiscalMonths.find(fm => {
+      const monthDate = new Date(fm.start_date);
+      const formattedMonth = `${monthDate.getFullYear()}-${String(monthDate.getMonth() + 1).padStart(2, '0')}`;
+      return formattedMonth === selectedMonth;
+    });
+
+    if (targetMonth) {
+      return {
+        startDate: new Date(targetMonth.start_date),
+        endDate: targetMonth.end_date ? new Date(targetMonth.end_date) : new Date()
+      };
+    }
+  }
+
+  // Get current active fiscal month
+  const activeMonth = fiscalMonths.find(fm => fm.is_active);
+  if (activeMonth) {
+    return {
+      startDate: new Date(activeMonth.start_date),
+      endDate: activeMonth.end_date ? new Date(activeMonth.end_date) : new Date()
+    };
+  }
+
+  // Fallback to salary cycle
+  return getSalaryCycleDates(selectedMonth);
 };
