@@ -4,10 +4,10 @@ import BudgetTracking from "@/components/budget-tracking";
 import SpendingAnalytics from "@/components/spending-analytics";
 import RecentTransactions from "@/components/recent-transactions";
 import AddTransactionModal from "@/components/add-transaction-modal";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent } from "@/components/ui/card";
+import PillMonthFilter from "@/components/pill-month-filter";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar, CalendarPlus } from "lucide-react";
+import { CalendarPlus } from "lucide-react";
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { startNewFiscalMonth } from "@/lib/supabase-direct";
@@ -95,42 +95,14 @@ export default function Dashboard() {
       <Header onAddTransaction={() => setIsAddTransactionOpen(true)} />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Month Filter */}
-        <Card className="mb-6 animate-fadeIn" style={{animationDelay: '0ms'}}>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <Calendar className="h-5 w-5 text-primary" />
-                <h3 className="text-lg font-semibold text-foreground">View Data For:</h3>
-              </div>
-              <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                <SelectTrigger className="w-64">
-                  <SelectValue placeholder="Select month" />
-                </SelectTrigger>
-                <SelectContent>
-                  {monthOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {/* Fiscal month button temporarily disabled - needs proper implementation
-              <div className="flex items-center space-x-3">
-                <Button
-                  onClick={() => startNewMonthMutation.mutate()}
-                  disabled={startNewMonthMutation.isPending}
-                  variant="outline"
-                  className="flex items-center space-x-2"
-                >
-                  <CalendarPlus className="h-4 w-4" />
-                  <span>Start New Month</span>
-                </Button>
-              </div>
-              */}
-            </div>
-          </CardContent>
-        </Card>
+        {/* Month Filter with Pill Nav Style */}
+        <div className="mb-6 animate-fadeIn" style={{animationDelay: '0ms'}}>
+          <PillMonthFilter
+            selectedMonth={selectedMonth}
+            onMonthChange={setSelectedMonth}
+            monthOptions={monthOptions}
+          />
+        </div>
 
         <FinancialOverview selectedMonth={selectedMonth} />
         

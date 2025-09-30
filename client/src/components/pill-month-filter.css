@@ -1,0 +1,266 @@
+.pill-month-filter-container {
+  --pill-bg: #ffffff;
+  --base: #000000;
+  --hover-text: #ffffff;
+  --pill-text: #000000;
+  --nav-h: 42px;
+  --pill-pad-x: 20px;
+  width: 100%;
+}
+
+.pill-filter-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px;
+  background: var(--base);
+  border-radius: 9999px;
+  height: calc(var(--nav-h) + 8px);
+  position: relative;
+}
+
+/* Icon Badge */
+.pill-icon-badge {
+  width: var(--nav-h);
+  height: var(--nav-h);
+  border-radius: 50%;
+  background: var(--pill-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.calendar-icon {
+  width: 20px;
+  height: 20px;
+  color: var(--base);
+}
+
+/* Label */
+.pill-filter-label {
+  color: var(--pill-bg);
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  padding: 0 8px;
+}
+
+/* Dropdown */
+.pill-dropdown {
+  position: relative;
+  flex: 1;
+  max-width: 280px;
+}
+
+.pill-dropdown-button {
+  width: 100%;
+  height: 36px;
+  padding: 0 var(--pill-pad-x);
+  background: var(--pill-bg);
+  color: var(--pill-text);
+  border: none;
+  border-radius: 9999px;
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: none;
+}
+
+.pill-dropdown-button:hover {
+  background: var(--pill-bg);
+}
+
+.pill-dropdown-button:focus-visible {
+  outline: 2px solid var(--pill-bg);
+  outline-offset: 2px;
+}
+
+.hover-circle {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 200%;
+  height: 200%;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.08);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.button-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  position: relative;
+  z-index: 1;
+}
+
+.selected-value {
+  flex: 1;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chevron-icon {
+  flex-shrink: 0;
+  margin-left: 8px;
+  transition: none;
+}
+
+/* Dropdown Menu */
+.pill-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  background: var(--pill-bg);
+  border-radius: 20px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  list-style: none;
+  margin: 0;
+  padding: 6px;
+  z-index: 1000;
+  max-height: 320px;
+  overflow-y: auto;
+  opacity: 0;
+  visibility: hidden;
+}
+
+.pill-dropdown-menu::-webkit-scrollbar {
+  width: 6px;
+}
+
+.pill-dropdown-menu::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.pill-dropdown-menu::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+.pill-dropdown-menu::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+/* Menu Items */
+.pill-dropdown-item {
+  padding: 10px 16px;
+  margin: 2px 0;
+  background: var(--base);
+  color: var(--hover-text);
+  border-radius: 9999px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  transition: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+}
+
+.pill-dropdown-item:hover {
+  background: rgba(0, 0, 0, 0.9);
+}
+
+.pill-dropdown-item.is-selected {
+  background: var(--base);
+  font-weight: 600;
+}
+
+.pill-dropdown-item.is-selected::before {
+  content: '';
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 4px;
+  background: var(--hover-text);
+  border-radius: 50%;
+}
+
+.item-label {
+  flex: 1;
+}
+
+.selected-indicator {
+  color: var(--hover-text);
+  font-size: 8px;
+  margin-left: 8px;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .pill-filter-wrapper {
+    padding: 3px;
+    gap: 8px;
+  }
+
+  .pill-filter-label {
+    font-size: 12px;
+    padding: 0 4px;
+  }
+
+  .pill-dropdown {
+    max-width: 200px;
+  }
+
+  .pill-dropdown-button {
+    height: 34px;
+    padding: 0 14px;
+    font-size: 12px;
+  }
+
+  .pill-dropdown-item {
+    padding: 8px 14px;
+    font-size: 12px;
+  }
+
+  .pill-icon-badge {
+    width: 36px;
+    height: 36px;
+  }
+
+  .calendar-icon {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .pill-month-filter-container {
+    --pill-bg: #1a1a1a;
+    --base: #ffffff;
+    --hover-text: #000000;
+    --pill-text: #ffffff;
+  }
+
+  .pill-dropdown-menu {
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  }
+
+  .hover-circle {
+    background: rgba(255, 255, 255, 0.1);
+  }
+}
