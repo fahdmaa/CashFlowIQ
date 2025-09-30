@@ -762,16 +762,20 @@ export const getSpendingAnalytics = async (days: number = 7, selectedMonth?: str
       startDate = cycleStart;
       endDate = cycleEnd;
     } else {
-      // Show last 'days' within the salary cycle
+      // Show last 'days' within the salary cycle, up to the cycle end date
       endDate = cycleEnd;
       startDate = new Date(cycleEnd);
       startDate.setDate(cycleEnd.getDate() - days + 1);
+      // Make sure startDate doesn't go before cycleStart
+      if (startDate < cycleStart) {
+        startDate = cycleStart;
+      }
     }
   } else {
     // Default behavior - last N days from today
     endDate = new Date();
     startDate = new Date();
-    startDate.setDate(endDate.getDate() - days);
+    startDate.setDate(endDate.getDate() - days + 1);
   }
   
   console.log(`Fetching spending data from ${startDate.toISOString()} to ${endDate.toISOString()}`);
