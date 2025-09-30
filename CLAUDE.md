@@ -84,7 +84,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 
 ## Important Notes
 
-- **ALWAYS COMMIT CHANGES** after completing tasks
+- **ALWAYS COMMIT AND PUSH CHANGES** after completing tasks - use `git push` to save to GitHub
 - Direct API calls are preferred over serverless functions for performance
 - Amounts can be entered flexibly (e.g., "1000", "1,000", "1k") and are normalized
 - Balance = income - expenses - savings
