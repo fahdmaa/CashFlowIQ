@@ -2,7 +2,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { PillSelect } from "@/components/ui/pill-select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -209,32 +209,30 @@ export default function AddTransactionModal({ isOpen, onClose }: AddTransactionM
 
           {watchedType === "expense" && (
             <div>
-              <Label htmlFor="category" className="text-sm font-medium text-foreground mb-2 block">Category</Label>
-              <Select onValueChange={(value) => setValue("category", value)} value={getValues("category")}>
-                <SelectTrigger data-testid="select-category">
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {getFilteredCategories().map(c => (
-                    <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>
-                  ))}
-                  {/* Fallback options if categories API fails */}
-                  {(!categories || categories.length === 0) && (
-                    <>
-                      <SelectItem value="Food & Dining">Food & Dining</SelectItem>
-                      <SelectItem value="Transportation">Transportation</SelectItem>
-                      <SelectItem value="Entertainment">Entertainment</SelectItem>
-                      <SelectItem value="Shopping">Shopping</SelectItem>
-                      <SelectItem value="Bills & Utilities">Bills & Utilities</SelectItem>
-                    </>
-                  )}
-                </SelectContent>
-              </Select>
+              <PillSelect
+                label="Category"
+                value={getValues("category")}
+                onValueChange={(value) => setValue("category", value)}
+                options={[
+                  ...getFilteredCategories().map(c => ({
+                    value: c.name,
+                    label: c.name
+                  })),
+                  // Fallback options if categories API fails
+                  ...(!categories || categories.length === 0 ? [
+                    { value: "Food & Dining", label: "Food & Dining" },
+                    { value: "Transportation", label: "Transportation" },
+                    { value: "Entertainment", label: "Entertainment" },
+                    { value: "Shopping", label: "Shopping" },
+                    { value: "Bills & Utilities", label: "Bills & Utilities" }
+                  ] : [])
+                ]}
+                placeholder="Select category"
+                error={errors.category?.message}
+                required
+              />
               {suggestedCategory && (
                 <p className="text-sm text-primary mt-1">Suggested: {suggestedCategory}</p>
-              )}
-              {errors.category && (
-                <p className="text-sm text-destructive mt-1">{errors.category.message}</p>
               )}
             </div>
           )}

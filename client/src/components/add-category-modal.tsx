@@ -2,7 +2,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { PillSelect } from "@/components/ui/pill-select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -133,25 +133,20 @@ export default function AddCategoryModal({ open, onOpenChange }: AddCategoryModa
             )}
           </div>
           <div>
-            <Label>Icon</Label>
-            <Select defaultValue="Utensils" onValueChange={(v) => setValue("icon", v)}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {iconOptions.map((icon) => {
-                  const IconComponent = (Icons as any)[icon];
-                  return (
-                    <SelectItem key={icon} value={icon}>
-                      <div className="flex items-center space-x-2">
-                        <IconComponent className="h-4 w-4" />
-                        <span>{icon}</span>
-                      </div>
-                    </SelectItem>
-                  );
-                })}
-              </SelectContent>
-            </Select>
+            <PillSelect
+              label="Icon"
+              value="Utensils"
+              onValueChange={(v) => setValue("icon", v)}
+              options={iconOptions.map((icon) => {
+                const IconComponent = (Icons as any)[icon];
+                return {
+                  value: icon,
+                  label: icon,
+                  icon: <IconComponent className="h-4 w-4" />
+                };
+              })}
+              placeholder="Select an icon"
+            />
             {errors.icon && (
               <p className="text-sm text-destructive mt-1">{errors.icon.message}</p>
             )}

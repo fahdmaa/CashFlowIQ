@@ -1,4 +1,4 @@
-import { Plus, User, Moon, Sun, LogOut, Settings } from "lucide-react";
+import { Plus, User, Moon, Sun, LogOut, Settings, UserCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
@@ -6,13 +6,7 @@ import { getCurrentUser, logout } from "@/lib/supabase-auth";
 import { getUserProfile } from "@/lib/supabase-direct";
 import Logo from "@/components/logo";
 import ProfilePictureUpload from "@/components/profile-picture-upload";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { PillDropdownMenu } from "@/components/ui/pill-dropdown-menu";
 
 interface HeaderProps {
   onAddTransaction: () => void;
@@ -138,39 +132,42 @@ export default function Header({ onAddTransaction }: HeaderProps) {
               <Plus className="h-4 w-4 mr-2" />
               Add Transaction
             </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center transition-all hover:scale-110 cursor-pointer overflow-hidden">
+            <PillDropdownMenu
+              trigger={
+                <div className="w-9 h-9 bg-foreground rounded-full flex items-center justify-center transition-all hover:scale-105 overflow-hidden">
                   {profilePictureUrl ? (
-                    <img 
-                      src={profilePictureUrl} 
-                      alt="Profile" 
+                    <img
+                      src={profilePictureUrl}
+                      alt="Profile"
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <User className="h-4 w-4 text-muted-foreground" />
+                    <User className="h-5 w-5 text-background" />
                   )}
                 </div>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-64">
-                <div className="px-2 py-1.5 text-sm font-medium">
-                  {currentUser}
-                </div>
-                <DropdownMenuSeparator />
-                <div className="p-4">
-                  <ProfilePictureUpload
-                    currentImageUrl={profilePictureUrl}
-                    onImageUpdate={setProfilePictureUrl}
-                    size="sm"
-                  />
-                </div>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout}>
-                  <LogOut className="h-4 w-4 mr-2" />
-                  Logout
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+              }
+              items={[
+                {
+                  label: currentUser || 'User',
+                  icon: <UserCircle className="h-4 w-4" />,
+                  disabled: true
+                },
+                { separator: true },
+                {
+                  label: 'Profile Settings',
+                  icon: <Settings className="h-4 w-4" />,
+                  onClick: () => setShowProfileUpload(true)
+                },
+                { separator: true },
+                {
+                  label: 'Logout',
+                  icon: <LogOut className="h-4 w-4" />,
+                  onClick: handleLogout,
+                  destructive: true
+                }
+              ]}
+              triggerClassName="avatar-trigger"
+            />
           </div>
         </div>
       </div>

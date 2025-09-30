@@ -2,7 +2,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { PillSelect } from "@/components/ui/pill-select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -247,26 +247,16 @@ export default function EditTransactionModal({ isOpen, onClose, transaction }: E
                   </Button>
                 </div>
               )}
-              <Select
+              <PillSelect
                 value={watch("category")}
                 onValueChange={(value) => setValue("category", value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {filteredCategories.map((category) => (
-                    <SelectItem key={category.id} value={category.name}>
-                      {category.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {errors.category && (
-                <p className="text-sm text-destructive mt-1">
-                  {errors.category.message}
-                </p>
-              )}
+                options={filteredCategories.map((category) => ({
+                  value: category.name,
+                  label: category.name
+                }))}
+                placeholder="Select category"
+                error={errors.category?.message}
+              />
             </div>
           )}
 
