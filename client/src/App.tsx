@@ -8,6 +8,7 @@ import { supabase, setupAuthListener, initializeAuth } from "@/lib/supabase-auth
 import Dashboard from "@/pages/dashboard";
 import Transactions from "@/pages/transactions";
 import Budgets from "@/pages/budgets";
+import Reports from "@/pages/reports";
 import SupabaseLogin from "@/pages/supabase-login";
 import EmailConfirmed from "@/pages/email-confirmed";
 import NotFound from "@/pages/not-found";
@@ -62,6 +63,11 @@ function Router() {
       <Route path="/budgets">
         <ProtectedRoute>
           <Budgets />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/reports">
+        <ProtectedRoute>
+          <Reports />
         </ProtectedRoute>
       </Route>
       <Route component={NotFound} />

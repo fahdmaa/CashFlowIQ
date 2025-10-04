@@ -30,7 +30,9 @@
       "Bash(git commit:*)",
       "Bash(git log:*)",
       "Bash(npm run lint)",
-      "Bash(git reset:*)"
+      "Bash(git reset:*)",
+      "Bash(set NODE_ENV=development)",
+      "Bash(tsx:*)"
     ],
     "deny": [],
     "ask": []

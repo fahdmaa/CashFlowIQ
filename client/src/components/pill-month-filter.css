@@ -1,89 +1,99 @@
 .pill-month-filter-container {
-  --pill-bg: #ffffff;
-  --base: #000000;
-  --hover-text: #ffffff;
-  --pill-text: #000000;
-  --nav-h: 42px;
-  --pill-pad-x: 20px;
+  --pill-primary: hsl(221.2 83.2% 53.3%);
+  --pill-primary-hover: hsl(221.2 83.2% 48%);
+  --pill-bg: hsl(0 0% 100%);
+  --pill-border: hsl(214.3 31.8% 91.4%);
+  --pill-text: hsl(222.2 47.4% 11.2%);
+  --pill-text-muted: hsl(215.4 16.3% 46.9%);
+  --pill-shadow: rgba(0, 0, 0, 0.05);
   width: 100%;
+  max-width: fit-content;
 }
 
 .pill-filter-wrapper {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 12px;
-  padding: 4px;
-  background: var(--base);
-  border-radius: 9999px;
-  height: calc(var(--nav-h) + 8px);
+  gap: 10px;
+  padding: 6px 14px 6px 8px;
+  background: var(--pill-bg);
+  border: 1px solid var(--pill-border);
+  border-radius: 12px;
   position: relative;
+  box-shadow: 0 1px 3px var(--pill-shadow);
+  transition: all 0.2s ease;
+}
+
+.pill-filter-wrapper:hover {
+  box-shadow: 0 4px 12px var(--pill-shadow);
+  border-color: var(--pill-primary);
 }
 
 /* Icon Badge */
 .pill-icon-badge {
-  width: var(--nav-h);
-  height: var(--nav-h);
-  border-radius: 50%;
-  background: var(--pill-bg);
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--pill-primary);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
   position: relative;
   overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.pill-icon-badge:hover {
+  background: var(--pill-primary-hover);
+  transform: scale(1.05);
 }
 
 .calendar-icon {
-  width: 20px;
-  height: 20px;
-  color: var(--base);
+  width: 18px;
+  height: 18px;
+  color: white;
 }
 
 /* Label */
 .pill-filter-label {
-  color: var(--pill-bg);
-  font-size: 14px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  color: var(--pill-text-muted);
+  font-size: 13px;
+  font-weight: 500;
   white-space: nowrap;
-  padding: 0 8px;
+  padding: 0 4px;
 }
 
 /* Dropdown */
 .pill-dropdown {
   position: relative;
-  flex: 1;
-  max-width: 280px;
+  min-width: 140px;
 }
 
 .pill-dropdown-button {
   width: 100%;
-  height: 36px;
-  padding: 0 var(--pill-pad-x);
-  background: var(--pill-bg);
+  height: 32px;
+  padding: 0 12px;
+  background: transparent;
   color: var(--pill-text);
   border: none;
-  border-radius: 9999px;
+  border-radius: 8px;
   font-size: 14px;
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
   cursor: pointer;
   position: relative;
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  transition: none;
+  transition: background 0.2s ease;
 }
 
 .pill-dropdown-button:hover {
-  background: var(--pill-bg);
+  background: hsl(214.3 31.8% 96%);
 }
 
 .pill-dropdown-button:focus-visible {
-  outline: 2px solid var(--pill-bg);
+  outline: 2px solid var(--pill-primary);
   outline-offset: 2px;
 }
 
@@ -94,7 +104,7 @@
   width: 200%;
   height: 200%;
   border-radius: 50%;
-  background: rgba(0, 0, 0, 0.08);
+  background: hsl(214.3 31.8% 96%);
   pointer-events: none;
   z-index: 0;
 }
@@ -129,11 +139,12 @@
   left: 0;
   right: 0;
   background: var(--pill-bg);
-  border-radius: 20px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--pill-border);
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
   list-style: none;
   margin: 0;
-  padding: 6px;
+  padding: 4px;
   z-index: 1000;
   max-height: 320px;
   overflow-y: auto;
@@ -160,17 +171,15 @@
 
 /* Menu Items */
 .pill-dropdown-item {
-  padding: 10px 16px;
-  margin: 2px 0;
-  background: var(--base);
-  color: var(--hover-text);
-  border-radius: 9999px;
+  padding: 8px 12px;
+  margin: 1px 0;
+  background: transparent;
+  color: var(--pill-text);
+  border-radius: 8px;
   cursor: pointer;
   font-size: 13px;
   font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-  transition: none;
+  transition: background 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -179,24 +188,17 @@
 }
 
 .pill-dropdown-item:hover {
-  background: rgba(0, 0, 0, 0.9);
+  background: hsl(214.3 31.8% 96%);
 }
 
 .pill-dropdown-item.is-selected {
-  background: var(--base);
+  background: var(--pill-primary);
+  color: white;
   font-weight: 600;
 }
 
-.pill-dropdown-item.is-selected::before {
-  content: '';
-  position: absolute;
-  left: 8px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 4px;
-  height: 4px;
-  background: var(--hover-text);
-  border-radius: 50%;
+.pill-dropdown-item.is-selected:hover {
+  background: var(--pill-primary-hover);
 }
 
 .item-label {
@@ -204,63 +206,72 @@
 }
 
 .selected-indicator {
-  color: var(--hover-text);
-  font-size: 8px;
+  color: white;
+  font-size: 10px;
   margin-left: 8px;
 }
 
 /* Responsive */
 @media (max-width: 640px) {
   .pill-filter-wrapper {
-    padding: 3px;
+    padding: 5px 12px 5px 6px;
     gap: 8px;
   }
 
   .pill-filter-label {
     font-size: 12px;
-    padding: 0 4px;
+    padding: 0 2px;
   }
 
   .pill-dropdown {
-    max-width: 200px;
+    min-width: 120px;
   }
 
   .pill-dropdown-button {
-    height: 34px;
-    padding: 0 14px;
-    font-size: 12px;
+    height: 28px;
+    padding: 0 10px;
+    font-size: 13px;
   }
 
   .pill-dropdown-item {
-    padding: 8px 14px;
+    padding: 7px 10px;
     font-size: 12px;
   }
 
   .pill-icon-badge {
-    width: 36px;
-    height: 36px;
+    width: 28px;
+    height: 28px;
   }
 
   .calendar-icon {
-    width: 18px;
-    height: 18px;
+    width: 16px;
+    height: 16px;
   }
 }
 
 /* Dark mode support */
-@media (prefers-color-scheme: dark) {
-  .pill-month-filter-container {
-    --pill-bg: #1a1a1a;
-    --base: #ffffff;
-    --hover-text: #000000;
-    --pill-text: #ffffff;
-  }
+.dark .pill-month-filter-container {
+  --pill-primary: hsl(217.2 91.2% 59.8%);
+  --pill-primary-hover: hsl(217.2 91.2% 54%);
+  --pill-bg: hsl(222.2 84% 4.9%);
+  --pill-border: hsl(217.2 32.6% 17.5%);
+  --pill-text: hsl(210 40% 98%);
+  --pill-text-muted: hsl(215 20.2% 65.1%);
+  --pill-shadow: rgba(0, 0, 0, 0.3);
+}
 
-  .pill-dropdown-menu {
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
-  }
+.dark .pill-dropdown-menu {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
 
-  .hover-circle {
-    background: rgba(255, 255, 255, 0.1);
-  }
+.dark .pill-dropdown-button:hover {
+  background: hsl(217.2 32.6% 12%);
+}
+
+.dark .pill-dropdown-item:hover {
+  background: hsl(217.2 32.6% 12%);
+}
+
+.dark .hover-circle {
+  background: hsl(217.2 32.6% 12%);
 }

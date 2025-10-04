@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Label } from "recharts";
 import { useState } from "react";
 
 interface SpendingAnalyticsProps {
@@ -97,14 +97,17 @@ export default function SpendingAnalytics({ selectedMonth }: SpendingAnalyticsPr
       </CardHeader>
 
       <CardContent>
-        <div className="h-64" data-testid="chart-spending-analytics">
+        <div className="h-80" data-testid="chart-spending-analytics">
           {chartData.length === 0 ? (
             <div className="flex items-center justify-center h-full text-muted-foreground">
               <p>No spending data available for the selected period</p>
             </div>
           ) : (
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={chartData}>
+              <LineChart
+                data={chartData}
+                margin={{ top: 30, right: 20, bottom: 5, left: 10 }}
+              >
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                 <XAxis
                   dataKey="date"
@@ -121,14 +124,28 @@ export default function SpendingAnalytics({ selectedMonth }: SpendingAnalyticsPr
                 <Line
                   type="monotone"
                   dataKey="spending"
-                  stroke="hsl(247.0588 88.8889% 70.1961%)"
+                  stroke="hsl(221.2 83.2% 53.3%)"
                   strokeWidth={3}
-                  fill="rgba(99, 102, 241, 0.1)"
+                  fill="rgba(59, 130, 246, 0.1)"
                   dot={{
-                    fill: "hsl(247.0588 88.8889% 70.1961%)",
+                    fill: "hsl(221.2 83.2% 53.3%)",
                     stroke: "#ffffff",
                     strokeWidth: 2,
                     r: 5
+                  }}
+                  label={{
+                    position: 'top',
+                    offset: 10,
+                    fill: 'hsl(221.2 83.2% 53.3%)',
+                    fontSize: 11,
+                    fontWeight: 600,
+                    formatter: (value: number) => {
+                      if (value <= 0) return '';
+                      // Format number with space as thousands separator and comma for decimals
+                      const parts = value.toFixed(2).split('.');
+                      const integerPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+                      return `${integerPart},${parts[1]}`;
+                    }
                   }}
                 />
               </LineChart>

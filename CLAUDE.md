@@ -25,42 +25,96 @@ npm run azure:start         # Start Azure production server (PORT 8080)
 ### Technology Stack
 - **Frontend**: React 18 + TypeScript + Vite
 - **Database**: Supabase (PostgreSQL with Row Level Security)
-- **State Management**: TanStack Query v5 for server state
+- **State Management**: TanStack Query v5 for server state caching
 - **UI Components**: shadcn/ui (Radix UI + Tailwind CSS)
-- **Routing**: Wouter v3
+- **Routing**: Wouter v3 (lightweight alternative to React Router)
 - **Charts**: Recharts
 - **Forms**: React Hook Form + Zod validation
 
-### Database Integration
-The application migrated from PocketBase to Supabase, using direct client-side integration with RLS policies for security:
+### Database Integration (Direct Client-Side Approach)
+The application migrated from PocketBase to Supabase. **IMPORTANT**: It uses **direct client-side database queries** instead of API endpoints for better performance:
 
-1. **Authentication**: Supabase Auth handles JWT tokens stored in localStorage
-2. **Direct Queries**: Client uses `supabase-direct.ts` to bypass API endpoints for better performance
-3. **Query Client**: `supabase-query-client.ts` wraps Supabase calls with TanStack Query for caching
-4. **RLS Policies**: All tables use `auth.uid()` to isolate user data
+1. **Authentication**: Supabase Auth with JWT tokens stored in localStorage
+   - Auth setup in `client/src/lib/supabase-auth.ts`
+   - Auto-refresh handled by `refreshAuthToken()` function
+
+2. **Direct Queries**: Client makes direct database calls via `supabase-direct.ts`
+   - Bypasses server API for most operations
+   - All queries protected by Row Level Security (RLS)
+   - 24+ exported functions for CRUD operations
+
+3. **Query Caching**: `supabase-query-client.ts` wraps TanStack Query
+   - Handles token refresh on 401 errors
+   - Manages cache invalidation
+
+4. **RLS Security**: All tables enforce user isolation via `auth.uid()` policies
+   - Each user can only access their own data
+   - Policies defined in `supabase/schema.sql`
+
+**Server Routes**: `server/supabase-routes.ts` exists as backup/legacy but is rarely used.
 
 ### Transaction Types & Categories
-- **income**: Auto-assigns "Salary" category, no category selection needed
-- **expense**: Requires category selection from user's categories
-- **savings**: Auto-assigns "Savings" category, deducted from balance calculations
+- **income**: Auto-assigns "Salary" category (no user selection needed)
+- **expense**: Requires category selection from user's custom categories
+- **savings**: Auto-assigns "Savings" category, **deducted from balance** (not included in spending)
 
-### Date Handling
-- Salary cycles run from 27th to 26th of each month
-- All dates normalized to ISO format (YYYY-MM-DD) before database storage
-- Frontend accepts flexible formats (DD/MM/YYYY, MM/DD/YYYY) via `normalize.ts`
+**Balance Calculation**: `currentBalance = monthlyIncome - monthlySpending - savingsAmount`
+
+### Date & Month Handling
+- **Salary Cycles**: Run from 27th of previous month to 26th of current month
+  - If today is Oct 28, you're in the "November" salary cycle (Oct 27 - Nov 26)
+  - Implemented in `getSalaryCycleDates()` in `supabase-direct.ts`
+
+- **Fiscal Months**: Optional user-defined month boundaries (currently disabled)
+  - `getFiscalCycleDates()` falls back to salary cycles
+  - Future feature for custom month start dates
+
+- **Date Normalization**: All dates stored as ISO format (YYYY-MM-DD)
+  - Frontend accepts DD/MM/YYYY or MM/DD/YYYY via `normalize.ts`
+  - `normalizeDateToISO()` converts to UTC midnight
+
+### Amount Input Normalization
+The `normalizeAmount()` function in `client/src/lib/normalize.ts` handles flexible user input:
+- Strips currency symbols/text: `"28 DH"` → `"28"`
+- Handles commas as decimal separators: `"28,50"` → `"28.50"`
+- Removes grouping separators: `"1,234.50"` → `"1234.50"`
+- Returns empty string for invalid numbers
 
 ### Key Files Structure
 ```
 client/src/lib/
-├── supabase-auth.ts        # Auth setup and token management
-├── supabase-direct.ts      # Direct Supabase queries
-├── supabase-query-client.ts # TanStack Query integration
-└── normalize.ts            # Input normalization utilities
+├── supabase-auth.ts          # Auth setup, token management, refresh
+├── supabase-direct.ts        # Direct DB queries (24+ functions)
+├── supabase-query-client.ts  # TanStack Query wrapper with auth
+├── normalize.ts              # Input normalization (amounts, dates)
+└── categorization.ts         # Category assignment logic
+
+client/src/components/
+├── financial-overview.tsx    # Dashboard summary cards
+├── budget-tracking.tsx       # Budget progress indicators
+├── spending-analytics.tsx    # Recharts spending graph
+├── recent-transactions.tsx   # Transaction list with edit/delete
+└── pill-month-filter.tsx     # Month selector dropdown
 
 server/
-├── supabase-routes.ts      # API endpoints (backup/legacy)
-└── supabase-storage.ts     # Server-side Supabase client
+├── index.ts                  # Express server setup
+├── supabase-routes.ts        # API endpoints (legacy/backup)
+└── supabase-storage.ts       # Server-side Supabase client
 ```
+
+### Component Patterns
+- **shadcn/ui**: All UI components in `client/src/components/ui/`
+  - Use existing components: Button, Card, Dialog, Select, etc.
+  - Custom variants: `pill-select.tsx`, `pill-dropdown-menu.tsx` for navigation
+
+- **Modals**: Dialog-based modals for forms
+  - `add-transaction-modal.tsx`: Create transactions
+  - `edit-transaction-modal.tsx`: Update transactions
+  - `add-category-modal.tsx`: Create categories with color/icon
+
+- **Data Fetching**: Use TanStack Query hooks
+  - Query keys match database tables: `['transactions']`, `['budgets']`, etc.
+  - Mutations invalidate related queries on success
 
 ## Development Workflow
 
@@ -77,16 +131,25 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 ```
 
 ### Before Committing
-1. Ensure TypeScript checks pass: `npm run check`
-2. Test in browser (responsive design)
-3. Verify RLS policies work (user isolation)
-4. Check console for errors
+1. Run TypeScript checks: `npm run check`
+2. Test in browser (check responsive design)
+3. Verify RLS policies work (user data isolation)
+4. Check browser console for errors
+
+### Deployment Targets
+- **Azure App Service**: Primary deployment (see `AZURE-DEPLOYMENT.md`)
+  - Uses `azure-server.js` entry point
+  - Configured via `web.config` and `.deployment`
+
+- **Vercel**: Alternative deployment option
+  - API routes in `api/` directory
+  - Build via `vercel-build` script
 
 ## Important Notes
 
-- **ALWAYS COMMIT AND PUSH CHANGES** after completing tasks - use `git push` to save to GitHub
-- Direct API calls are preferred over serverless functions for performance
-- Amounts can be entered flexibly (e.g., "1000", "1,000", "1k") and are normalized
-- Balance = income - expenses - savings
-- Auth tokens stored in localStorage with refresh handling
-- Use existing UI patterns from shadcn/ui components
+- **ALWAYS COMMIT AND PUSH** after completing tasks - use `git push` to save to GitHub
+- Direct client-side queries are **preferred** over API endpoints for performance
+- Auth tokens auto-refresh on 401 errors via `supabase-query-client.ts`
+- All monetary amounts normalized via `normalizeAmount()` before storage
+- Month selection affects what data is displayed (salary cycle filtering)
+- Use existing shadcn/ui patterns for consistency

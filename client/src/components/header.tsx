@@ -5,8 +5,8 @@ import { Link, useLocation } from "wouter";
 import { getCurrentUser, logout } from "@/lib/supabase-auth";
 import { getUserProfile } from "@/lib/supabase-direct";
 import Logo from "@/components/logo";
-import ProfilePictureUpload from "@/components/profile-picture-upload";
 import { PillDropdownMenu } from "@/components/ui/pill-dropdown-menu";
+import ProfileSettingsModal from "@/components/profile-settings-modal";
 
 interface HeaderProps {
   onAddTransaction: () => void;
@@ -17,7 +17,7 @@ export default function Header({ onAddTransaction }: HeaderProps) {
   const [location, navigate] = useLocation();
   const [currentUser, setCurrentUser] = useState<string | null>(null);
   const [profilePictureUrl, setProfilePictureUrl] = useState<string | null>(null);
-  const [showProfileUpload, setShowProfileUpload] = useState(false);
+  const [showProfileSettings, setShowProfileSettings] = useState(false);
 
   useEffect(() => {
     const stored = localStorage.getItem("theme");
@@ -93,24 +93,28 @@ export default function Header({ onAddTransaction }: HeaderProps) {
               >
                 Transactions
               </Link>
-              <Link 
-                href="/budgets" 
+              <Link
+                href="/budgets"
                 className={`font-medium pb-1 transition-all ${
-                  location === "/budgets" 
-                    ? "text-primary border-b-2 border-primary" 
+                  location === "/budgets"
+                    ? "text-primary border-b-2 border-primary"
                     : "text-muted-foreground hover:text-foreground hover:border-b-2 hover:border-muted-foreground"
-                }`} 
+                }`}
                 data-testid="nav-budgets"
               >
                 Budgets
               </Link>
-              <a 
-                href="#" 
-                className="text-muted-foreground hover:text-foreground transition-all hover:border-b-2 hover:border-muted-foreground pb-1 font-medium" 
+              <Link
+                href="/reports"
+                className={`font-medium pb-1 transition-all ${
+                  location === "/reports"
+                    ? "text-primary border-b-2 border-primary"
+                    : "text-muted-foreground hover:text-foreground hover:border-b-2 hover:border-muted-foreground"
+                }`}
                 data-testid="nav-reports"
               >
                 Reports
-              </a>
+              </Link>
             </nav>
           </div>
           <div className="flex items-center space-x-4">
@@ -126,7 +130,7 @@ export default function Header({ onAddTransaction }: HeaderProps) {
             </Button>
             <Button
               onClick={onAddTransaction}
-              className="bg-primary text-white hover:bg-primary/90 transition-all hover-lift"
+              className="bg-primary text-white hover:bg-primary/90 transition-all hover-lift rounded-[14.4px]"
               data-testid="button-add-transaction"
             >
               <Plus className="h-4 w-4 mr-2" />
@@ -156,7 +160,7 @@ export default function Header({ onAddTransaction }: HeaderProps) {
                 {
                   label: 'Profile Settings',
                   icon: <Settings className="h-4 w-4" />,
-                  onClick: () => setShowProfileUpload(true)
+                  onClick: () => setShowProfileSettings(true)
                 },
                 { separator: true },
                 {
@@ -171,6 +175,13 @@ export default function Header({ onAddTransaction }: HeaderProps) {
           </div>
         </div>
       </div>
+
+      <ProfileSettingsModal
+        isOpen={showProfileSettings}
+        onClose={() => setShowProfileSettings(false)}
+        currentImageUrl={profilePictureUrl}
+        onImageUpdate={(newUrl) => setProfilePictureUrl(newUrl)}
+      />
     </header>
   );
 }

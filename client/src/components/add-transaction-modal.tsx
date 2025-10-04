@@ -60,6 +60,7 @@ export default function AddTransactionModal({ isOpen, onClose }: AddTransactionM
 
   const watchedDescription = watch("description");
   const watchedType = watch("type");
+  const watchedCategory = watch("category");
 
   // Auto-categorization when description changes
   useEffect(() => {
@@ -151,59 +152,102 @@ export default function AddTransactionModal({ isOpen, onClose }: AddTransactionM
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>Add Transaction</DialogTitle>
+      <DialogContent className="max-w-md rounded-2xl border-border/50 shadow-2xl">
+        <DialogHeader className="pb-2">
+          <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            Add Transaction
+          </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 pt-2">
           <div>
-            <Label className="text-sm font-medium text-foreground mb-2 block">Type</Label>
+            <Label className="text-sm font-semibold text-foreground mb-3 block">Transaction Type</Label>
             <RadioGroup defaultValue="expense" onValueChange={(value) => setValue("type", value as "income" | "expense" | "savings")}>
-              <div className="flex space-x-4">
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="expense" id="expense" data-testid="radio-expense" />
-                  <Label htmlFor="expense" className="text-sm">Expense</Label>
+              <div className="flex gap-3">
+                <div className="flex-1">
+                  <input
+                    type="radio"
+                    value="expense"
+                    id="expense"
+                    className="peer sr-only"
+                    {...register("type")}
+                  />
+                  <Label
+                    htmlFor="expense"
+                    className="flex items-center justify-center rounded-xl border-2 border-border bg-background px-4 py-3 hover:bg-accent cursor-pointer transition-all peer-checked:border-primary peer-checked:bg-primary/10 peer-checked:text-primary font-medium"
+                    data-testid="radio-expense"
+                  >
+                    Expense
+                  </Label>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="income" id="income" data-testid="radio-income" />
-                  <Label htmlFor="income" className="text-sm">Income</Label>
+                <div className="flex-1">
+                  <input
+                    type="radio"
+                    value="income"
+                    id="income"
+                    className="peer sr-only"
+                    {...register("type")}
+                  />
+                  <Label
+                    htmlFor="income"
+                    className="flex items-center justify-center rounded-xl border-2 border-border bg-background px-4 py-3 hover:bg-accent cursor-pointer transition-all peer-checked:border-green-500 peer-checked:bg-green-500/10 peer-checked:text-green-600 font-medium"
+                    data-testid="radio-income"
+                  >
+                    Income
+                  </Label>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="savings" id="savings" data-testid="radio-savings" />
-                  <Label htmlFor="savings" className="text-sm">Savings</Label>
+                <div className="flex-1">
+                  <input
+                    type="radio"
+                    value="savings"
+                    id="savings"
+                    className="peer sr-only"
+                    {...register("type")}
+                  />
+                  <Label
+                    htmlFor="savings"
+                    className="flex items-center justify-center rounded-xl border-2 border-border bg-background px-4 py-3 hover:bg-accent cursor-pointer transition-all peer-checked:border-amber-500 peer-checked:bg-amber-500/10 peer-checked:text-amber-600 font-medium"
+                    data-testid="radio-savings"
+                  >
+                    Savings
+                  </Label>
                 </div>
               </div>
             </RadioGroup>
           </div>
 
           <div>
-            <Label htmlFor="amount" className="text-sm font-medium text-foreground mb-2 block">Amount</Label>
+            <Label htmlFor="amount" className="text-sm font-semibold text-foreground mb-2 block">Amount</Label>
             <div className="relative">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg font-bold text-muted-foreground">DH</span>
               <Input
                 {...register("amount")}
                 type="number"
                 step="0.01"
                 placeholder="0.00"
-                className="pr-12"
+                className="pl-14 pr-4 h-12 text-lg font-semibold rounded-xl border-2 focus:border-primary transition-all"
                 data-testid="input-amount"
               />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-medium">DH</span>
             </div>
             {errors.amount && (
-              <p className="text-sm text-destructive mt-1">{errors.amount.message}</p>
+              <p className="text-sm text-destructive mt-1.5">
+                {errors.amount.message}
+              </p>
             )}
           </div>
 
           <div>
-            <Label htmlFor="description" className="text-sm font-medium text-foreground mb-2 block">Description</Label>
+            <Label htmlFor="description" className="text-sm font-semibold text-foreground mb-2 block">Description</Label>
             <Input
               {...register("description")}
               placeholder="What was this transaction for?"
+              className="h-11 rounded-xl border-2 focus:border-primary transition-all"
               data-testid="input-description"
             />
             {errors.description && (
-              <p className="text-sm text-destructive mt-1">{errors.description.message}</p>
+              <p className="text-sm text-destructive mt-1.5">
+                {errors.description.message}
+              </p>
             )}
           </div>
 
@@ -211,8 +255,11 @@ export default function AddTransactionModal({ isOpen, onClose }: AddTransactionM
             <div>
               <PillSelect
                 label="Category"
-                value={getValues("category")}
-                onValueChange={(value) => setValue("category", value)}
+                value={watchedCategory}
+                onValueChange={(value) => {
+                  setValue("category", value);
+                  setSuggestedCategory("");
+                }}
                 options={[
                   ...getFilteredCategories().map(c => ({
                     value: c.name,
@@ -238,29 +285,33 @@ export default function AddTransactionModal({ isOpen, onClose }: AddTransactionM
           )}
 
           <div>
-            <Label htmlFor="date" className="text-sm font-medium text-foreground mb-2 block">Date</Label>
+            <Label htmlFor="date" className="text-sm font-semibold text-foreground mb-2 block">Date</Label>
             <Input
               {...register("date")}
               type="date"
+              className="h-11 rounded-xl border-2 focus:border-primary transition-all"
               data-testid="input-date"
             />
             {errors.date && (
-              <p className="text-sm text-descriptive mt-1">{errors.date.message}</p>
+              <p className="text-sm text-destructive mt-1.5">
+                {errors.date.message}
+              </p>
             )}
           </div>
 
-          <div className="flex space-x-3 pt-4">
-            <Button 
-              type="button" 
-              onClick={handleClose} 
-              className="flex-1 bg-white/10 backdrop-blur-md border border-white/20 text-foreground hover:bg-white/20 transition-all duration-300 shadow-lg hover:shadow-xl"
+          <div className="flex gap-3 pt-6">
+            <Button
+              type="button"
+              onClick={handleClose}
+              variant="outline"
+              className="flex-1 h-12 rounded-xl border-2 font-semibold hover:bg-accent transition-all"
               data-testid="button-cancel"
             >
               Cancel
             </Button>
-            <Button 
-              type="submit" 
-              className="flex-1 bg-gradient-to-r from-blue-500/20 to-purple-600/20 backdrop-blur-md border border-white/30 text-foreground hover:from-blue-500/30 hover:to-purple-600/30 transition-all duration-300 shadow-lg hover:shadow-2xl hover:scale-105"
+            <Button
+              type="submit"
+              className="flex-1 h-12 rounded-xl bg-primary hover:bg-primary/90 font-semibold shadow-lg hover:shadow-xl transition-all hover:scale-[1.02]"
               disabled={createTransactionMutation.isPending}
               data-testid="button-submit"
             >

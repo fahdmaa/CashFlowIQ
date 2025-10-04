@@ -752,35 +752,23 @@ export const getSpendingAnalytics = async (days: number = 7, selectedMonth?: str
     throw new Error('User not authenticated');
   }
   
-  let endDate: Date;
-  let startDate: Date;
-  
+  // Always show last N days from today (inclusive) for spending analytics
+  const endDate = new Date();
+  const startDate = new Date();
+  startDate.setDate(endDate.getDate() - (days - 1));
+
+  // If selectedMonth is provided, constrain to that month's salary cycle
   if (selectedMonth) {
-    // Use fiscal/salary cycle dates for the selected month
     const fiscalDates = await getFiscalCycleDates(selectedMonth);
     const { startDate: cycleStart, endDate: cycleEnd } = fiscalDates;
-    
-    // For spending analytics, we still want to respect the 'days' parameter within the cycle
-    const cycleDays = Math.ceil((cycleEnd.getTime() - cycleStart.getTime()) / (1000 * 60 * 60 * 24));
-    if (days >= cycleDays) {
-      // Show the entire salary cycle
-      startDate = cycleStart;
-      endDate = cycleEnd;
-    } else {
-      // Show last 'days' within the salary cycle, up to the cycle end date
-      endDate = cycleEnd;
-      startDate = new Date(cycleEnd);
-      startDate.setDate(cycleEnd.getDate() - days + 1);
-      // Make sure startDate doesn't go before cycleStart
-      if (startDate < cycleStart) {
-        startDate = cycleStart;
-      }
+
+    // Ensure we don't go outside the salary cycle boundaries
+    if (startDate < cycleStart) {
+      startDate.setTime(cycleStart.getTime());
     }
-  } else {
-    // Default behavior - last N days from today
-    endDate = new Date();
-    startDate = new Date();
-    startDate.setDate(endDate.getDate() - days + 1);
+    if (endDate > cycleEnd) {
+      endDate.setTime(cycleEnd.getTime());
+    }
   }
   
   console.log(`Fetching spending data from ${startDate.toISOString()} to ${endDate.toISOString()}`);
