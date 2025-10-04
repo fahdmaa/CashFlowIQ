@@ -93,8 +93,8 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-background">
       <Header onAddTransaction={() => setIsAddTransactionOpen(true)} />
-      
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+      <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-20 sm:pt-24 pb-8">
         {/* Month Filter with Pill Nav Style */}
         <div className="mb-6 animate-fadeIn" style={{animationDelay: '0ms'}}>
           <PillMonthFilter
@@ -105,14 +105,14 @@ export default function Dashboard() {
         </div>
 
         <FinancialOverview selectedMonth={selectedMonth} />
-        
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-8">
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
+          <div className="lg:col-span-2 space-y-4 sm:space-y-6 lg:space-y-8">
             <BudgetTracking selectedMonth={selectedMonth} />
             <SpendingAnalytics selectedMonth={selectedMonth} />
           </div>
-          
-          <div className="space-y-8">
+
+          <div className="space-y-4 sm:space-y-6 lg:space-y-8">
             <RecentTransactions selectedMonth={selectedMonth} />
           </div>
         </div>

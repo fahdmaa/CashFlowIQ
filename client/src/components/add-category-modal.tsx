@@ -89,9 +89,9 @@ export default function AddCategoryModal({ open, onOpenChange }: AddCategoryModa
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md w-[calc(100vw-2rem)] sm:w-full rounded-2xl">
         <DialogHeader>
-          <DialogTitle>Add Category</DialogTitle>
+          <DialogTitle className="text-xl sm:text-2xl">Add Category</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {errorMessage && (

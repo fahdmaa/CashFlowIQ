@@ -32,7 +32,14 @@
       "Bash(npm run lint)",
       "Bash(git reset:*)",
       "Bash(set NODE_ENV=development)",
-      "Bash(tsx:*)"
+      "Bash(tsx:*)",
+      "Bash(for file in transactions.tsx budgets.tsx reports.tsx)",
+      "Bash(do)",
+      "Bash(if [ -f \"$file\" ])",
+      "Bash(then)",
+      "Bash(echo:*)",
+      "Bash(fi)",
+      "Bash(done)"
     ],
     "deny": [],
     "ask": []

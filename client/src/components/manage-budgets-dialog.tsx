@@ -214,9 +214,9 @@ function ManageBudgetsDialog({ open, onOpenChange }: ManageBudgetsDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg w-[calc(100vw-2rem)] sm:w-full rounded-2xl">
         <DialogHeader>
-          <DialogTitle>Manage Budgets</DialogTitle>
+          <DialogTitle className="text-xl sm:text-2xl">Manage Budgets</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           {budgets?.map((budget) => (

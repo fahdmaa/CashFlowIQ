@@ -152,9 +152,9 @@ export default function AddTransactionModal({ isOpen, onClose }: AddTransactionM
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-md rounded-2xl border-border/50 shadow-2xl">
+      <DialogContent className="max-w-md w-[calc(100vw-2rem)] sm:w-full rounded-2xl border-border/50 shadow-2xl">
         <DialogHeader className="pb-2">
-          <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          <DialogTitle className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
             Add Transaction
           </DialogTitle>
         </DialogHeader>

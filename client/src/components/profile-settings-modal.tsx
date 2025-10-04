@@ -16,9 +16,9 @@ export default function ProfileSettingsModal({
 }: ProfileSettingsModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md rounded-2xl border-border/50 shadow-2xl">
+      <DialogContent className="max-w-md w-[calc(100vw-2rem)] sm:w-full rounded-2xl border-border/50 shadow-2xl">
         <DialogHeader className="pb-4">
-          <DialogTitle className="text-2xl font-bold">
+          <DialogTitle className="text-xl sm:text-2xl font-bold">
             Profile Settings
           </DialogTitle>
         </DialogHeader>

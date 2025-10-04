@@ -157,9 +157,9 @@ export default function EditTransactionModal({ isOpen, onClose, transaction }: E
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md w-[calc(100vw-2rem)] sm:w-full rounded-2xl">
         <DialogHeader>
-          <DialogTitle>Edit Transaction</DialogTitle>
+          <DialogTitle className="text-xl sm:text-2xl">Edit Transaction</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {/* Transaction Type */}

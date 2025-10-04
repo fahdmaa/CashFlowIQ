@@ -219,7 +219,7 @@ export default function Transactions() {
     return (
       <div className="min-h-screen bg-background">
         <Header onAddTransaction={() => setIsAddTransactionOpen(true)} />
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-20 sm:pt-24 pb-8">
           <Skeleton className="h-32 w-full mb-8" />
           <Skeleton className="h-96 w-full" />
         </main>
@@ -231,7 +231,7 @@ export default function Transactions() {
     <div className="min-h-screen bg-background">
       <Header onAddTransaction={() => setIsAddTransactionOpen(true)} />
       
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-20 sm:pt-24 pb-8">
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card className="rounded-xl animate-fadeIn hover-lift transition-all" style={{animationDelay: '0ms'}}>

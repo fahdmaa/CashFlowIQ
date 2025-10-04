@@ -61,16 +61,21 @@ export default function Header({ onAddTransaction }: HeaderProps) {
   };
 
   return (
-    <header className="bg-background shadow-sm border-b border-border">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          <div className="flex items-center space-x-8">
-            <Logo 
-              size="lg" 
-              showText={false} 
-              className="animate-fadeIn"
+    <header className="bg-background shadow-sm border-b border-border fixed top-0 left-0 right-0 z-50">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-14 sm:h-16">
+          <div className="flex items-center space-x-4 sm:space-x-8">
+            <Logo
+              size="md"
+              showText={false}
+              className="animate-fadeIn sm:hidden"
             />
-            <nav className="hidden md:flex space-x-8">
+            <Logo
+              size="lg"
+              showText={false}
+              className="animate-fadeIn hidden sm:block"
+            />
+            <nav className="hidden md:flex space-x-4 lg:space-x-8">
               <Link 
                 href="/" 
                 className={`font-medium pb-1 transition-all ${
@@ -117,24 +122,24 @@ export default function Header({ onAddTransaction }: HeaderProps) {
               </Link>
             </nav>
           </div>
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 sm:space-x-4">
             <Button
               variant="ghost"
               size="icon"
               onClick={toggleTheme}
-              className="transition-all hover:scale-110"
+              className="transition-all hover:scale-110 h-9 w-9 sm:h-10 sm:w-10"
               data-testid="button-toggle-theme"
             >
-              {isDark ? <Sun className="h-5 w-5 transition-transform" /> : <Moon className="h-5 w-5 transition-transform" />}
+              {isDark ? <Sun className="h-4 w-4 sm:h-5 sm:w-5 transition-transform" /> : <Moon className="h-4 w-4 sm:h-5 sm:w-5 transition-transform" />}
               <span className="sr-only">Toggle theme</span>
             </Button>
             <Button
               onClick={onAddTransaction}
-              className="bg-primary text-white hover:bg-primary/90 transition-all hover-lift rounded-[14.4px]"
+              className="bg-primary text-white hover:bg-primary/90 transition-all hover-lift rounded-[14.4px] h-9 sm:h-10 px-3 sm:px-4 text-sm sm:text-base"
               data-testid="button-add-transaction"
             >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Transaction
+              <Plus className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Add Transaction</span>
             </Button>
             <PillDropdownMenu
               trigger={
