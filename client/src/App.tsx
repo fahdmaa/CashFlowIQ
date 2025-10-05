@@ -11,6 +11,7 @@ import Budgets from "@/pages/budgets";
 import Reports from "@/pages/reports";
 import SupabaseLogin from "@/pages/supabase-login";
 import EmailConfirmed from "@/pages/email-confirmed";
+import ResetPassword from "@/pages/reset-password";
 import NotFound from "@/pages/not-found";
 import ProtectedRoute from "@/components/protected-route";
 
@@ -50,6 +51,7 @@ function Router() {
     <Switch>
       <Route path="/login" component={SupabaseLogin} />
       <Route path="/email-confirmed" component={EmailConfirmed} />
+      <Route path="/reset-password" component={ResetPassword} />
       <Route path="/">
         <ProtectedRoute>
           <Dashboard />

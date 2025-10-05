@@ -19,6 +19,8 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY!;
 export const supabase: SupabaseClient = createClient(supabaseUrl, supabaseAnonKey);
 
 export const signUp = async (email: string, password: string, username: string): Promise<User> => {
+  console.log('SignUp: Starting signup process for:', email);
+
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
@@ -29,20 +31,27 @@ export const signUp = async (email: string, password: string, username: string):
     }
   });
 
+  console.log('SignUp: Response received:', { data, error });
+
   if (error) {
+    console.error('SignUp: Error occurred:', error);
     throw new Error(error.message);
   }
 
   if (!data.user) {
+    console.error('SignUp: No user data in response');
     throw new Error("Failed to create account");
   }
+
+  console.log('SignUp: User created:', data.user.id, 'Has session:', !!data.session);
 
   // If email confirmation is required, there will be no session until confirmed
   if (data.session) {
     // User is immediately confirmed (email confirmation disabled)
+    console.log('SignUp: Email confirmation disabled, user logged in immediately');
     localStorage.setItem("authToken", data.session.access_token);
     localStorage.setItem("refreshToken", data.session.refresh_token);
-    
+
     const user = {
       id: data.user.id,
       username: username,
@@ -52,6 +61,7 @@ export const signUp = async (email: string, password: string, username: string):
     return user;
   } else {
     // Email confirmation is required
+    console.log('SignUp: Email confirmation required, confirmation email should be sent to:', email);
     // Return user info without storing tokens
     return {
       id: data.user.id,
@@ -191,7 +201,7 @@ export const setupAuthListener = (onAuthStateChange: (user: User | null) => void
 export const initializeAuth = async (): Promise<User | null> => {
   try {
     const { data: { session } } = await supabase.auth.getSession();
-    
+
     if (session?.user) {
       const user = {
         id: session.user.id,
@@ -203,10 +213,26 @@ export const initializeAuth = async (): Promise<User | null> => {
       localStorage.setItem("refreshToken", session.refresh_token);
       return user;
     }
-    
+
     return null;
   } catch (error) {
     console.error('Error initializing auth:', error);
     return null;
   }
+};
+
+// Send password reset email
+export const resetPassword = async (email: string): Promise<void> => {
+  console.log('ResetPassword: Sending password reset email to:', email);
+
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${window.location.origin}/reset-password`,
+  });
+
+  if (error) {
+    console.error('ResetPassword: Error occurred:', error);
+    throw new Error(error.message);
+  }
+
+  console.log('ResetPassword: Password reset email sent successfully');
 };

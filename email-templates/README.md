@@ -42,12 +42,19 @@ After updating the template:
 2. Check your email inbox for the confirmation email
 3. Verify the email looks good and the confirmation link works
 
+### 5. Update Password Reset Template
+1. Click on **Reset Password** from the list of templates in Supabase
+2. Copy the contents of `reset-password.html` file
+3. Paste it into the **Message Body (HTML)** field
+4. Click **Save** at the bottom
+
 ## Already Implemented Success Messages
 
 The app already has modern success messages for:
 - ✅ **Signup Success**: Shows "Account Created!" with animation and instructions to check email
 - ✅ **Email Confirmation**: Shows "Email Confirmed!" when user clicks confirmation link
 - ✅ **Login Success**: Shows "Authenticated Successfully!" with redirect to dashboard
+- ✅ **Password Reset**: Shows form to set new password, then redirects to login
 
 All success screens include:
 - Animated icons (checkmark, spinner)
