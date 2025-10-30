@@ -153,3 +153,44 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 - All monetary amounts normalized via `normalizeAmount()` before storage
 - Month selection affects what data is displayed (salary cycle filtering)
 - Use existing shadcn/ui patterns for consistency
+
+## Documentation Cleanup Policy
+
+**IMPORTANT**: After completing any task, delete temporary/task-specific .md files to keep the repository clean:
+
+### Files to ALWAYS Keep
+- `README.md` - Main project documentation
+- `CLAUDE.md` - This file (instructions for Claude Code)
+- `AZURE-DEPLOYMENT.md` - Current deployment instructions
+- `email-templates/README.md` - Email template setup guide
+
+### Files to DELETE After Task Completion
+Delete any .md files that were created for specific tasks or debugging sessions, such as:
+- Migration guides (after migration is complete)
+- Debugging instructions (after bugs are fixed)
+- Setup guides for completed features
+- Historical summaries
+- Platform-specific guides that are no longer relevant (e.g., Replit, PocketBase)
+
+### When to Clean Up
+1. **Immediately after task completion**: Remove any temporary documentation files created during the task
+2. **During code review**: Check for outdated .md files before committing
+3. **Before major releases**: Audit all documentation and remove obsolete files
+
+Use this command to identify potential cleanup candidates:
+```bash
+# List all .md files in root directory
+ls *.md
+
+# Review and delete unnecessary files
+rm <filename>.md
+```
+
+Always commit the cleanup with a clear message:
+```
+chore: remove outdated documentation files
+
+🤖 Generated with [Claude Code](https://claude.ai/code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+```
