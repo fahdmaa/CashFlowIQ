@@ -1,6 +1,8 @@
 import "dotenv/config";
 import express, { type Request, Response, NextFunction } from "express";
 import { registerSupabaseRoutes } from "./supabase-routes";
+import mongodbRoutes from "./mongodb-routes";
+import { connectToMongoDB } from "./mongodb-connection";
 import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
@@ -38,6 +40,19 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Connect to MongoDB
+  try {
+    await connectToMongoDB();
+    log("✅ MongoDB connected successfully");
+  } catch (error) {
+    log("❌ MongoDB connection failed:", error);
+    process.exit(1);
+  }
+
+  // Register MongoDB routes (primary)
+  app.use("/api", mongodbRoutes);
+
+  // Keep Supabase routes as backup (will be removed later)
   const server = await registerSupabaseRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {

@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useLocation } from "wouter";
-import { isAuthenticated } from "@/lib/supabase-auth";
+import { isAuthenticated } from "@/lib/mongodb-auth";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
