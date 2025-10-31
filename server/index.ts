@@ -1,6 +1,6 @@
 import "dotenv/config";
 import express, { type Request, Response, NextFunction } from "express";
-import { registerSupabaseRoutes } from "./supabase-routes";
+import { createServer } from "http";
 import mongodbRoutes from "./mongodb-routes";
 import { connectToMongoDB } from "./mongodb-connection";
 import { setupVite, serveStatic, log } from "./vite";
@@ -49,11 +49,12 @@ app.use((req, res, next) => {
     process.exit(1);
   }
 
-  // Register MongoDB routes (primary)
-  app.use("/api", mongodbRoutes);
+  // Create HTTP server
+  const server = createServer(app);
 
-  // Keep Supabase routes as backup (will be removed later)
-  const server = await registerSupabaseRoutes(app);
+  // Register MongoDB routes (primary) - BEFORE error handler and Vite
+  app.use("/api", mongodbRoutes);
+  log("✅ MongoDB API routes registered");
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
